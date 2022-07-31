@@ -69,6 +69,25 @@ Monophonic Synthesizer for Raspberry Pi Pico (2021)<br>
 第6部第2章：リアルタイム処理のために軽量化！シンセサイザの製作</li>
     <ul>
     <li><a href="https://interface.cqpub.co.jp/correction/">Interface 訂正と修正</a>　2021年8月号　p.142　～　p.153</li>
+<!--
+<pre>
+・p.142　右　↓8行目
+（正）
+・分圧回路
+・アナログ・ハイパス・フィルタ
+（誤）
+・カットオフ周波数が約33.9Hzのアナログ・ハイパス・フィルタ
+・p.151　リスト10　↓8行目
+（正）  return ((int32_t) (x0 * y) >> 16) + (x1 * y);
+（誤）  return ((x0 * y) >> 16) + (x1 * y);
+・p.152　右　↑6行目
+（正）割り込みハンドラ内にhardware_syncライブラリの関数__dmb()でデータ・メモリ・バリア命令を挿入していますが，メモリ書き込み結果は無条件に他のコアから見えるため，この命令は不要でした．削除しても構いません．
+（誤）メイン関数で通信コマンドを処理するコア0とのメモリ同期のため，割り込みハンドラ内にhardware_syncライブラリの関数__dmb()でデータ・メモリ・バリア命令を挿入しています．
+・p.153　左　↓5行目
+（正）バスを共用しているために
+（誤）メモリ同期処理のために
+</pre>
+-->
     <li><a href="https://www.cqpub.co.jp/interface/download/contents2021.htm">Interface 2021年 ダウンロード・データ</a>　8月号　ラズパイのマイコンPico攻略本<br>
     IF2108TB6S2
         <ul>
