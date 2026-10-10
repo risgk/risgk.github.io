@@ -10,6 +10,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  touch-action: manipulation;  /* scroll and pinch zoom by a touch, but no double-tap zoom (e.g. tapping a button twice) */
 }
 * {
   box-sizing: border-box;
@@ -23,7 +24,11 @@ html {
   --kbd-frame-color: #555;  /* the frame of the soft keyboard, lighter than the black keys (#111) */
   --pra32-color: rgb(255,85,0);
   --pra32-color-dark: rgb(204,68,0);
-  --param-width: 228px;  /* 135px (slider) + 25px (value) + 68px (value label) */
+  /* A parameter: the slider, the value, and the value label (228px; 178px in the compact 2 columns) */
+  --slider-width: 135px;
+  --value-width: 25px;
+  --value-label-width: 68px;
+  --param-width: calc(var(--slider-width) + var(--value-width) + var(--value-label-width));
 }
 body {
   margin: 8px;
@@ -195,6 +200,8 @@ span.cc {
    The names of a row share their height (subgrid), so the sliders of a row line up even if a name wraps */
 /* As wide as the columns of the mode (4: 912px, 2: 456px, 1: 228px), so that the lines end at the right of the columns */
 .params {
+  /* Computed here (not only in :root), so that the widths of the compact 2 columns are used */
+  --param-width: calc(var(--slider-width) + var(--value-width) + var(--value-label-width));
   width: fit-content;
   border-top: 1px solid #c0c0c0;
   margin-bottom: 14px;
@@ -246,10 +253,26 @@ span.cc {
     margin-top: 8px;
   }
 }
+/* Compact 2 columns (e.g. iPhone SE 2, 375px wide): narrower sliders and value labels (178px a parameter) */
 @container (max-width: 455px) {
+  .params {
+    --slider-width: 100px;
+    --value-width: 24px;
+    --value-label-width: 54px;
+  }
+}
+/* 1 column (a list, as in PRA32-U2 Native) if 2 compact parameters do not fit */
+@container (max-width: 355px) {
+  .params {
+    --slider-width: 135px;
+    --value-width: 25px;
+    --value-label-width: 68px;
+  }
   .param-group {
     grid-template-columns: var(--param-width);
   }
+}
+@container (max-width: 455px) {
   /* The banks of Recall, Store, Program Change, and Write (#0-7 / #8-15) in 2 lines too (in 2 columns, they fit in 1 line) */
   .banks.split-1 {
     row-gap: 0;
@@ -300,7 +323,8 @@ span.cc {
   align-self: end;
 }
 /* A name is on 1 line. A name too long for its width (e.g. "Voice Mode [Pol|Pol|Mon|Mon|LP|Lgt] CC#18")
-   gets the letters closer together ("tight"), and smaller if still too long ("tighter"), by fitParamNames() */
+   gets the letters closer together ("tight"), and smaller if still too long ("tighter"), by fitParamNames().
+   If it is still too long (in the compact 2 columns), it wraps ("wrap"); the names of a row share their height */
 .param-name {
   white-space: nowrap;
 }
@@ -315,9 +339,12 @@ span.cc {
 .param-name.tighter span.cc {
   font-size: 9px;
 }
+.param-name.wrap {
+  white-space: normal;
+}
 .param-ctrl {
   display: grid;
-  grid-template-columns: 135px 25px 68px;
+  grid-template-columns: var(--slider-width) var(--value-width) var(--value-label-width);
   height: 29px;
   padding: 1px;
   align-items: start;
@@ -327,24 +354,25 @@ span.cc {
   padding-left: 1px;
 }
 .param-ctrl > input[type="range"] {
-  width: 129px;
+  width: calc(var(--slider-width) - 6px);
   margin: 2px;
 }
 /* Markers that do not pull the slider (unlike the markers of a datalist): drawn as the background of the slider cell,
    at the same positions as the datalist markers of Chrome (the input is at 3px, and a marker of the value v is
-   at 7px + 113px * v / 127 in the input, 1px wide and 4px high at the bottom). The center (64) for [-|+] and [N|S],
+   at 7px + (the width of the input - 16px) * v / 127 in the input, 1px wide and 4px high at the bottom; e.g. 67px for 64
+   in a 135px slider cell). The center (64) for [-|+] and [N|S],
    and the 6 markers (as in "6 markers") and the center for Osc 1 Morph, which can be used as a 6-way switch */
 .soft-marker-c {
-  background: linear-gradient(#101010, #101010) 67px 21px / 1px 4px no-repeat;
+  background: linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 64/127) 21px / 1px 4px no-repeat;
 }
 .soft-markers-6-c {
-  background: linear-gradient(#101010, #101010)  10px 21px / 1px 4px no-repeat,
-              linear-gradient(#101010, #101010)  33px 21px / 1px 4px no-repeat,
-              linear-gradient(#101010, #101010)  55px 21px / 1px 4px no-repeat,
-              linear-gradient(#101010, #101010)  67px 21px / 1px 4px no-repeat,
-              linear-gradient(#101010, #101010)  79px 21px / 1px 4px no-repeat,
-              linear-gradient(#101010, #101010) 101px 21px / 1px 4px no-repeat,
-              linear-gradient(#101010, #101010) 123px 21px / 1px 4px no-repeat;
+  background: linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 0/127) 21px / 1px 4px no-repeat,
+              linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 26/127) 21px / 1px 4px no-repeat,
+              linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 51/127) 21px / 1px 4px no-repeat,
+              linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 64/127) 21px / 1px 4px no-repeat,
+              linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 77/127) 21px / 1px 4px no-repeat,
+              linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 102/127) 21px / 1px 4px no-repeat,
+              linear-gradient(#101010, #101010) calc(10px + (var(--slider-width) - 22px) * 127/127) 21px / 1px 4px no-repeat;
 }
 
 /* ---- Soft keyboard (after SPMS-1 Editor): C-1 - G9 (37 keys, C3 - C6, in a 960px window), scrolled by the octave buttons or the scroll bar ---- */
@@ -804,12 +832,6 @@ var transpose = 0;
 var fileReaderImportAll = new FileReader();
 var fileReaderImportCurrent = new FileReader();
 
-document.addEventListener("touchstart", function(event) {
-  if (!event.target.closest("input, select, button, summary, a, label")) {
-    event.preventDefault();
-  }
-}, { passive: false });
-
 window.onload = function() {
   document.getElementById("spanAppNameVersion").innerHTML = "<strong>" + APP_NAME_VERSION + "</strong>";
   var valueMIDICh = localStorage.getItem("keyMIDICh");
@@ -844,7 +866,10 @@ window.onload = function() {
       fitProgLabels();
     });
   }
-  window.addEventListener("resize", fitProgLabels);
+  window.addEventListener("resize", function() {
+    fitParamNames();
+    fitProgLabels();
+  });
   document.querySelector("details").addEventListener("toggle", fitProgLabels);
 
   document.getElementById("fileImportAll").addEventListener("change", fileImportAllChange, false);
@@ -1481,16 +1506,17 @@ function fitButtons() {
 }
 
 // The names of the parameters on 1 line: a name too long for its width gets the letters closer together,
-// and smaller if still too long (the widths of the fonts differ among the OSes, so measured here)
+// and smaller if still too long, and wraps if still too long (in the compact 2 columns) (the widths of the fonts differ among the OSes, so measured here)
 function fitParamNames() {
   document.querySelectorAll(".param-name").forEach(function(name) {
-    name.classList.remove("tight", "tighter");
-    if (name.scrollWidth > name.clientWidth) {
-      name.classList.add("tight");
-      if (name.scrollWidth > name.clientWidth) {
-        name.classList.add("tighter");
+    name.classList.remove("tight", "tighter", "wrap");
+    ["tight", "tighter", "wrap"].some(function(cls) {
+      if (name.scrollWidth <= name.clientWidth) {
+        return true;
       }
-    }
+      name.classList.add(cls);
+      return false;
+    });
   });
 }
 
