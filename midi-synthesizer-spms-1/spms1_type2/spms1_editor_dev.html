@@ -8,7 +8,7 @@
        Open Font License), not as text, so that it is the same in every OS; embedded, so that it needs no file beside the page -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='5'%20fill='%23E0115F'/%3E%3Cpath%20d='M10.13%2024.5Q7.89%2024.5%206.8%2023.47Q5.71%2022.44%205.71%2020.19V15.89H3.33V12.94H5.71V8.63H10.11V12.94H13.76V15.89H10.11V19.51Q10.11%2020.6%2010.36%2020.96Q10.61%2021.33%2011.26%2021.33Q12.26%2021.33%2013.3%2020.99L13.76%2024.05Q12.08%2024.5%2010.13%2024.5ZM16.88%2020.65Q19.92%2018.36%2021.44%2016.96Q22.96%2015.57%2023.43%2014.73Q23.91%2013.89%2023.91%2012.94Q23.91%2011.24%2021.98%2011.24Q20.28%2011.24%2017.56%2012.94L16.43%209.31Q17.59%208.54%2019.35%208.02Q21.12%207.5%2022.66%207.5Q25.5%207.5%2027.03%208.83Q28.56%2010.15%2028.56%2012.49Q28.56%2014.35%2027.38%2016.02Q26.2%2017.7%2022.78%2020.6V20.65H28.67V24.27H16.88Z'%20fill='white'/%3E%3C/svg%3E">
   <!-- SPMS-1 Web: the synth itself, built into the editor as "SPMS-1 Web (Built-in)" in MIDI Out (optional) -->
-  <script src="spms1_web_synth.js"></script>
+  <script src="spms1_web_synth_dev.js"></script>
   <style>
     :root {
       --primary-color: #E0115F;  /* Ruby, 4.8:1 with white */
@@ -70,7 +70,7 @@
       gap: 12px;
       flex-wrap: wrap;
     }
-    /* The title as large as PRA32-U2 Editor's, 20px, at every width. */
+    /* The title at 20px, at every width. */
     header h1 {
       font-size: 1.25rem;
       color: var(--primary-color);
@@ -598,7 +598,7 @@
     /* Soft keyboard */
     /* On the Controls tab, kept at the bottom of the window while the page scrolls above it, as on
        a 1280 x 720 screen or a phone, upright or on its side, so the keys stay at hand under the
-       controls, with lower keys in a low window (below), as in PRA32-U2 Editor; on the Patch tab
+       controls, with lower keys in a low window (below); on the Patch tab
        only with Wide, where the canvas ends above it and the side panels scroll behind it, and
        not in one column (a phone), where it would take much of the window over the canvas. */
     body:has(#tab-controls:not([hidden])) #kbd-panel {
@@ -692,7 +692,7 @@
     }
     /* On a phone the bar takes one line from 360px, its heading, buttons and gaps a little
        smaller; and in a window up to 640px high, as a phone upright or on its side under the bars
-       of the browser, the keys are lower, 100px as in PRA32-U2 Editor, so that the keyboard at the
+       of the browser, the keys are lower, 100px, so that the keyboard at the
        bottom leaves more of the window to the controls. */
     @media (max-width: 480px) {
       #kbd-panel .kbd-bar { column-gap: 3px; }
@@ -1563,7 +1563,7 @@
 <body>
 
 <header>
-  <h1>SPMS-1 (type-2) Editor<span class="version">v0.4.0</span><span class="github-link">(<a href="https://github.com/risgk/midi_synthesizer_spms1" target="_blank" rel="noopener">View on GitHub</a>)</span></h1>
+  <h1>SPMS-1 (type-2) Editor<span class="version">v0.4.1</span><span class="github-link">(<a href="https://github.com/risgk/midi_synthesizer_spms1" target="_blank" rel="noopener">View on GitHub</a>)</span></h1>
   <nav class="tabs">
     <button class="tab-btn active" data-tab="controls">Controls</button>
     <button class="tab-btn" data-tab="patch">Patch</button>
@@ -1892,7 +1892,7 @@
       {"entry":61,"module":"MIXER_2","key":"LEVEL_2","label":"Level 2","bipolar":false,"cc":20,"value":4,"controller":false,"performance":false,"hintInputs":["IN_2"],"favorite":true,"slots":[["MIXER_2_LEVEL_2","Level 2",false]]},
       {"entry":62,"module":"MIXER_2","key":"LEVEL_3","label":"Level 3","bipolar":false,"cc":21,"value":4,"controller":false,"performance":false,"hintInputs":["IN_3"],"favorite":true,"slots":[["MIXER_2_LEVEL_3","Level 3",false]]},
       {"entry":63,"module":"MIXER_2","key":"LEVEL_4","label":"Level 4","bipolar":false,"cc":23,"value":4,"controller":false,"performance":false,"hintInputs":["IN_4"],"favorite":true,"slots":[["MIXER_2_LEVEL_4","Level 4",false]]},
-      {"entry":64,"module":"MIXER_2","key":"OUT_LEVEL","label":"Out Level","bipolar":false,"cc":0,"value":64,"controller":false,"performance":false,"slots":[["MIXER_2_OUT_LEVEL","Out Level",false]]},
+      {"entry":64,"module":"MIXER_2","key":"OUT_LEVEL","label":"Out Level","bipolar":false,"cc":0,"value":124,"controller":false,"performance":false,"slots":[["MIXER_2_OUT_LEVEL","Out Level",false]]},
       {"entry":65,"module":"FILTER_1","key":"MODE","label":"Mode","bipolar":false,"cc":39,"value":4,"controller":false,"performance":false,"hint":"LP to Notch to HP","slots":[["FILTER_1_MODE","Mode",false]]},
       {"entry":66,"module":"FILTER_1","key":"CUTOFF","label":"Cutoff","bipolar":false,"cc":74,"value":100,"controller":false,"performance":false,"slots":[["FILTER_1_CUTOFF","Cutoff",false]]},
       {"entry":67,"module":"FILTER_1","key":"RESONANCE","label":"Resonance","bipolar":false,"cc":0,"value":4,"controller":false,"performance":false,"slots":[["FILTER_1_RESONANCE","Resonance",false]]},
@@ -1916,7 +1916,7 @@
       {"entry":85,"module":"FILTER_2","key":"MOD_2_AMT","label":"Mod 2 Amt","bipolar":false,"cc":25,"value":4,"controller":false,"performance":false,"hintInputs":["MOD_2_IN"],"favorite":true,"slots":[["FILTER_2_MOD_2_AMT","Mod 2 Amt",false]]},
       {"entry":86,"module":"FILTER_2","key":"MOD_2_POL","label":"Mod 2 Pol","bipolar":true,"cc":0,"value":76,"controller":false,"performance":false,"hint":"− to +","slots":[["FILTER_2_MOD_2_POL","Mod 2 Pol",true]]},
       {"entry":87,"module":"AMP_1","key":"GAIN_1","label":"Gain 1","bipolar":false,"cc":0,"value":4,"controller":false,"performance":false,"hintInputs":["AUDIO_IN_1"],"slots":[["AMP_1_GAIN_1","Gain 1",false]]},
-      {"entry":88,"module":"AMP_1","key":"GAIN_2","label":"Gain 2","bipolar":false,"cc":15,"value":88,"controller":false,"performance":false,"hintInputs":["AUDIO_IN_2"],"favorite":true,"slots":[["AMP_1_GAIN_2","Gain 2",false]]},
+      {"entry":88,"module":"AMP_1","key":"GAIN_2","label":"Gain 2","bipolar":false,"cc":15,"value":64,"controller":false,"performance":false,"hintInputs":["AUDIO_IN_2"],"favorite":true,"slots":[["AMP_1_GAIN_2","Gain 2",false]]},
       {"entry":89,"module":"AMP_1","key":"MOD_1_2_MIX","label":"Mod 1/2 Mix","bipolar":false,"cc":36,"value":4,"controller":false,"performance":false,"hintInputs":["MOD_1_IN","MOD_2_IN"],"favorite":true,"slots":[["AMP_1_MOD_1_2_MIX","Mod 1/2 Mix",false]]},
       {"entry":90,"module":"CHORUS_1","key":"MIX","label":"Mix","bipolar":false,"cc":93,"value":64,"controller":false,"performance":false,"favorite":true,"slots":[["CHORUS_1_MIX","Mix",false]]},
       {"entry":91,"module":"CHORUS_1","key":"RATE","label":"Rate","bipolar":false,"cc":58,"value":64,"controller":false,"performance":false,"favorite":true,"slots":[["CHORUS_1_RATE","Rate",false]]},
@@ -1929,6 +1929,8 @@
       {"entry":98,"key":"GENERAL_1","label":"General 1","bipolar":false,"cc":16,"value":4,"controller":true,"performance":false,"slots":[["GENERAL_1","General 1",false],["GENERAL_1_REV","General 1 Rev",false,"rev"],["GENERAL_1_INV","General 1 Inv",false,"inv"],["GENERAL_1_REV_INV","General 1 Rev Inv",false,"rev_inv"],["GENERAL_1_BIPOLAR","General 1 Bipolar",true,"bipolar"],["GENERAL_1_BIPOLAR_INV","General 1 Bipolar Inv",true,"bipolar_inv"],["GENERAL_1_COS","General 1 Cos",false,"cos"],["GENERAL_1_SIN","General 1 Sin",false,"sin"],["GENERAL_1_LO","General 1 Lo",false,"lo"],["GENERAL_1_HI","General 1 Hi",false,"hi"],["GENERAL_1_NEG","General 1 Neg",false,"neg"],["GENERAL_1_MID","General 1 Mid",false,"mid"],["GENERAL_1_POS","General 1 Pos",false,"pos"]]},
       {"entry":99,"key":"GENERAL_2","label":"General 2","bipolar":false,"cc":17,"value":4,"controller":true,"performance":false,"slots":[["GENERAL_2","General 2",false],["GENERAL_2_REV","General 2 Rev",false,"rev"],["GENERAL_2_INV","General 2 Inv",false,"inv"],["GENERAL_2_REV_INV","General 2 Rev Inv",false,"rev_inv"],["GENERAL_2_BIPOLAR","General 2 Bipolar",true,"bipolar"],["GENERAL_2_BIPOLAR_INV","General 2 Bipolar Inv",true,"bipolar_inv"],["GENERAL_2_COS","General 2 Cos",false,"cos"],["GENERAL_2_SIN","General 2 Sin",false,"sin"],["GENERAL_2_LO","General 2 Lo",false,"lo"],["GENERAL_2_HI","General 2 Hi",false,"hi"],["GENERAL_2_NEG","General 2 Neg",false,"neg"],["GENERAL_2_MID","General 2 Mid",false,"mid"],["GENERAL_2_POS","General 2 Pos",false,"pos"]]},
       {"entry":100,"module":"AMP_1","key":"LIMITER_SW","label":"Limiter Sw","bipolar":false,"cc":0,"value":124,"controller":false,"performance":false,"hint":"Off/On","slots":[["AMP_1_LIMITER_SW","Limiter Sw",false]]},
+      {"entry":101,"module":"FILTER_1","key":"DRIVE","label":"Drive","bipolar":false,"cc":31,"value":4,"controller":false,"performance":false,"hint":"x1 to x16","slots":[["FILTER_1_DRIVE","Drive",false]]},
+      {"entry":102,"module":"FILTER_2","key":"DRIVE","label":"Drive","bipolar":false,"cc":31,"value":4,"controller":false,"performance":false,"hint":"x1 to x16","favorite":true,"slots":[["FILTER_2_DRIVE","Drive",false]]},
     ],
     signals: [
       {"id":0,"key":"NONE","label":"0.0"},
@@ -2016,7 +2018,7 @@
       {"id":82,"key":"DELAY_1_OUTPUT_MONO"},
     ],
     defaultOrder: ["PITCH_1","EG_1","EG_2","LFO_1","MIXER_1","OSC_1","OSC_2","NOISE_1","MIXER_2","FILTER_1","FILTER_2","AMP_1","CHORUS_1","DELAY_1"],
-    specHash: 0x4062907C,
+    specHash: 0x225BCC08,
   };
   // patch_gen end
 
