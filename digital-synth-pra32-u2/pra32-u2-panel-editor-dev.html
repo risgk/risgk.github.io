@@ -47,7 +47,12 @@ button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-v
 .param-name .sup { font-size: 9px; color: #666; }
 .cc { font-size: 9px; color: #999; margin-left: 4px; }
 .param-ctrl { display: flex; align-items: center; gap: 6px; }
-.param-ctrl input[type="range"] { width: 149px; min-width: 0; flex: 0 1 auto; }
+.param-ctrl .slider { position: relative; display: block; width: 149px; min-width: 0; flex: 0 1 auto; height: calc(var(--thumb-size) + 5px); }
+.param-ctrl .slider input[type="range"] { width: 100%; display: block; }
+/* Markers below a slider (as PRA32-U2 Editor): the values of a switch, or the center (64) for [-|+], each just below the
+   center of the thumb for the value */
+.marker { position: absolute; top: calc(var(--thumb-size) + 1px); width: 1px; height: 4px; background: #101010;
+          left: calc(var(--thumb-size) / 2 + (100% - var(--thumb-size)) * var(--at)); }
 /* A value: the CC value, and then what it is in [] (as PRA32-U2 Editor) */
 .val { min-width: 25px; text-align: right; font-variant-numeric: tabular-nums; }
 .label { min-width: 48px; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -159,6 +164,10 @@ const CONTROL_CHANGE = 0xB0;
 
 // The parameters on the Panel Channel: [key, name, sup, CC#, default, display]
 const SCALES = ["Maj", "Min", "Mel", "MaP", "MiP", "Chr"];
+// The markers below the sliders (the values of a switch, or the center for [-|+]), as PRA32-U2 Editor
+const MARKERS_2 = [0, 127], MARKERS_3 = [0, 64, 127], MARKERS_6 = [0, 26, 51, 77, 102, 127], MARKER_C = [64];
+const MARKERS = { 42: MARKERS_2, 40: MARKERS_6, 41: MARKER_C, 46: MARKER_C,
+                  49: MARKERS_2, 55: MARKERS_3, 50: MARKERS_6, 52: MARKERS_3, 54: MARKER_C, 57: MARKERS_2 };
 const PANEL_PARAMS = [
   ["PLAY_MODE", "Panel Play Mode", "[Nrm|Seq]",                     42, 0,   v => ["Nrm", "Seq"][(v * 2 + 128) >> 8]],
   ["SCALE",     "Panel Scale",     "[Maj|Min|Mel|MaP|MiP|Chr]",     40, 0,   v => SCALES[(v * 10 + 128) >> 8]],
@@ -281,7 +290,8 @@ function makeParam(container, p) {
   const [key, name, sup, cc] = p;
   const div = document.createElement("div");
   div.innerHTML = `<div class="param-name">${name} <span class="sup">${sup}</span><span class="cc">CC#${cc}</span></div>
-    <div class="param-ctrl"><input type="range" min="0" max="127" step="1" id="input${cc}" aria-label="${name}"><span class="val" id="val${cc}"></span><span class="label" id="label${cc}"></span></div>`;
+    <div class="param-ctrl"><span class="slider"><input type="range" min="0" max="127" step="1" id="input${cc}" aria-label="${name}">${
+      (MARKERS[cc] || []).map(v => `<span class="marker" style="--at: ${v / 127}"></span>`).join("")}</span><span class="val" id="val${cc}"></span><span class="label" id="label${cc}"></span></div>`;
   container.appendChild(div);
   const input = div.querySelector("input");
   input.addEventListener("input", () => onChangeValue(cc, parseInt(input.value)));
