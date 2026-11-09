@@ -39,13 +39,18 @@ button.on { background: var(--pra32-color); border-color: var(--pra32-color-dark
 button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible {
   outline: 2px solid var(--pra32-color); outline-offset: 1px;
 }
-.params { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 16px; }
-.param-name { white-space: nowrap; }
+/* The parameters in 4 columns (as PRA32-U2 Editor, 230px each), or in 2 columns on a narrower screen */
+.params { display: grid; grid-template-columns: repeat(2, minmax(0, 230px)); gap: 6px 8px; }
+@media (min-width: 960px) { .params { grid-template-columns: repeat(4, 230px); } }
+.params > div { min-width: 0; }
+.param-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .param-name .sup { font-size: 9px; color: #666; }
 .cc { font-size: 9px; color: #999; margin-left: 4px; }
 .param-ctrl { display: flex; align-items: center; gap: 6px; }
-.param-ctrl input[type="range"] { width: 149px; }
-.val { min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+.param-ctrl input[type="range"] { width: 149px; min-width: 0; flex: 0 1 auto; }
+/* A value: the CC value, and then what it is in [] (as PRA32-U2 Editor) */
+.val { min-width: 25px; text-align: right; font-variant-numeric: tabular-nums; }
+.label { min-width: 48px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 input[type="range"] {
   -webkit-appearance: none; appearance: none; height: var(--thumb-size); background: transparent; margin: 0;
   --fill: 0;
@@ -78,8 +83,8 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
   input[type="checkbox"] { width: 20px; height: 20px; }
 }
 @media (max-width: 520px) {
-  .param-ctrl input[type="range"] { width: 120px; }
-  table.steps input[type="range"] { width: 90px; }
+  table.steps input[type="range"] { width: 72px; }
+  table.steps th, table.steps td { padding-right: 4px; }
 }
 </style>
 </head>
@@ -123,7 +128,7 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 <div class="params" id="divSeqParams"></div>
 <div class="row" style="margin-top: 8px">
 <table class="steps" id="tableSteps">
-  <thead><tr><th>Step</th><th>Pitch <span class="cc">CC#16-23</span></th><th></th><th>Velo <span class="cc">CC#24-31</span></th><th></th><th>On</th><th>Act</th></tr></thead>
+  <thead><tr><th>Step</th><th>Pitch <span class="cc">CC#16-23</span></th><th></th><th></th><th>Velo <span class="cc">CC#24-31</span></th><th></th><th>On</th><th>Act</th></tr></thead>
   <tbody></tbody>
 </table>
 </div>
@@ -276,7 +281,7 @@ function makeParam(container, p) {
   const [key, name, sup, cc] = p;
   const div = document.createElement("div");
   div.innerHTML = `<div class="param-name">${name} <span class="sup">${sup}</span><span class="cc">CC#${cc}</span></div>
-    <div class="param-ctrl"><input type="range" min="0" max="127" step="1" id="input${cc}" aria-label="${name}"><span class="val" id="val${cc}"></span></div>`;
+    <div class="param-ctrl"><input type="range" min="0" max="127" step="1" id="input${cc}" aria-label="${name}"><span class="val" id="val${cc}"></span><span class="label" id="label${cc}"></span></div>`;
   container.appendChild(div);
   const input = div.querySelector("input");
   input.addEventListener("input", () => onChangeValue(cc, parseInt(input.value)));
@@ -287,7 +292,7 @@ function makeSteps() {
   for (let i = 0; i < 8; i++) {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${i}</td>
-      <td><input type="range" min="0" max="127" step="1" id="input${16 + i}" aria-label="Seq Pitch ${i}"></td><td class="val" id="val${16 + i}"></td>
+      <td><input type="range" min="0" max="127" step="1" id="input${16 + i}" aria-label="Seq Pitch ${i}"></td><td class="val" id="val${16 + i}"></td><td class="label" id="label${16 + i}"></td>
       <td><input type="range" min="0" max="127" step="1" id="input${24 + i}" aria-label="Seq Velo ${i}"></td><td class="val" id="val${24 + i}"></td>
       <td class="c"><input type="checkbox" id="on${i}" aria-label="Step ${i} On" ${i === 0 ? "checked disabled" : ""}></td>
       <td class="c"><input type="checkbox" id="act${i}" aria-label="Step ${i} Active" ${i === 0 ? "checked disabled" : ""}></td>`;
@@ -331,7 +336,10 @@ function updateDisplay() {
     if (input) {
       input.value = values[cc];
       updateFill(input);
-      document.getElementById("val" + cc).textContent = displayOf(Number(cc));
+      const text = displayOf(Number(cc));
+      document.getElementById("val" + cc).textContent = values[cc];
+      const label = document.getElementById("label" + cc);
+      if (label) { label.textContent = (text === String(values[cc])) ? "" : "[" + text + "]"; }
     }
   }
   for (let i = 1; i < 8; i++) {
