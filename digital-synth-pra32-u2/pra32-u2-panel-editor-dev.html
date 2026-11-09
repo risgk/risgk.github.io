@@ -109,9 +109,6 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 <div class="row">
   <button id="buttonPlay" onclick="onClickPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button>
   <span id="spanPlayHint" class="note"></span>
-  <label title="The page that PRA32-U2/P shows (on the display, or in the debug print without the display)">Panel Page
-    <select id="selectPageGroup" onchange="sendPage()"><option>A</option><option>B</option><option>C</option><option>D</option></select>-<input type="number" id="inputPageIndex" min="0" max="35" value="4" style="width: 44px" onchange="sendPage()">
-    <span class="cc">CC#59, 60</span></label>
   <label id="labelSynth" hidden>Panel Synth <select id="selectSynth" onchange="onChangeSynth()"></select> <span class="cc">CC#58</span></label>
 </div>
 </details>
@@ -347,14 +344,6 @@ function updateDisplay() {
   play.textContent = playing ? (seqMode ? "Stop" : "Release") : "Play";
 }
 
-// Panel Page Group (CC#59: 0, 42, 84, and 127 for A, B, C, and D) and Panel Page Index (CC#60)
-function sendPage() {
-  const group = document.getElementById("selectPageGroup").selectedIndex;
-  const index = clamp(parseInt(document.getElementById("inputPageIndex").value) || 0, 0, 127);
-  sendCC(59, [0, 42, 84, 127][group]);
-  sendCC(60, index);
-}
-
 function onClickPlay() {
   playing = !playing;
   sendCC(111, playing ? 127 : 0);
@@ -489,7 +478,6 @@ window.addEventListener("load", () => {
   const ch = document.getElementById("selectBasicCh");
   for (let i = 1; i <= 16; i++) { const o = document.createElement("option"); o.textContent = i; ch.appendChild(o); }
   ch.selectedIndex = settings.basicCh;
-  document.getElementById("selectPageGroup").selectedIndex = 1;
   document.getElementById("selectModel").value = settings.model;
   PANEL_PARAMS.forEach(p => makeParam(document.getElementById("divPanelParams"), p));
   SEQ_PARAMS.forEach(p => makeParam(document.getElementById("divSeqParams"), p));
