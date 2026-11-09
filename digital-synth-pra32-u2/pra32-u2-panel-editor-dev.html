@@ -171,6 +171,10 @@ const SEQ_PARAMS = [
   ["NUM_STEPS", "Seq Num Steps",   "1-32",                          51, 32,  v => String(Math.max((v - 2) >> 2, 0) + 1)],
   ["PIT_OFST_S","Seq Pitch Ofst",  "[-|+]",                         54, 64,  v => signed(clamp(v - 64, -60, 60))],
   ["TRX_ST_SP", "Seq T/Rx St/Sp",  "[Off|On]",                      57, 0,   v => ["Off", "On"][(v * 2 + 128) >> 8]],
+  // The steps On and Active as the bits (bit 0 for Step 1, ..., bit 6 for Step 7), shown in hex as on the panel:
+  // a slider (as a knob of the panel) goes through the patterns, as well as the check boxes of the steps below
+  ["ON_STEPS",  "Seq On Steps",    "bits",                          56, 127, v => hex2(v)],
+  ["ACT_STEPS", "Seq Act Steps",   "bits",                          53, 127, v => hex2(v)],
 ];
 const ON_STEPS_CC = 56, ACT_STEPS_CC = 53;
 const DEFAULT_SEQ_PITCH = [4, 22, 37, 57, 72, 89, 107, 124];
@@ -207,6 +211,7 @@ let playing = false;
 
 function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
 function signed(v) { return (v > 0 ? "+" : "") + v; }
+function hex2(v) { return "x" + v.toString(16).toUpperCase().padStart(2, "0"); }
 
 // The pitch as PRA32-U2/P shows it (see PRA32_U2_ControlPanel_calc_scaled_pitch())
 const SCALE_TABLES = [
@@ -235,8 +240,6 @@ function defaultValues() {
   const v = {};
   PANEL_PARAMS.concat(SEQ_PARAMS).forEach(p => { v[p[3]] = p[4]; });
   for (let i = 0; i < 8; i++) { v[16 + i] = DEFAULT_SEQ_PITCH[i]; v[24 + i] = DEFAULT_SEQ_VELO[i]; }
-  v[ON_STEPS_CC] = 127;
-  v[ACT_STEPS_CC] = 127;
   return v;
 }
 
