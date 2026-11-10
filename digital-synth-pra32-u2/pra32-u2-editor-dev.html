@@ -3742,26 +3742,31 @@ function panelHex2(v) { return "x" + v.toString(16).toUpperCase().padStart(2, "0
 
 // [category, name, supplement, CC#, default, display, markers (the class of PRA32-U2 Editor)], in groups (rows of 4)
 const PANEL_PARAM_GROUPS = [
+  // In the order of the pages of the panel (B-00 to B-03), 2 a page (MIDI Basic Ch of B-00 and the empty one of B-03
+  // are empty cells here)
   [["Panel", "Play Mode",  "[Nrm|Seq]",                 42, 0,   v => ["Nrm", "Seq"][(v * 2 + 128) >> 8],       "soft-markers-2"],
-   ["Panel", "Scale",      "[Maj|Min|Mel|MaP|MiP|Chr]", 40, 0,   v => PANEL_SCALES[(v * 10 + 128) >> 8],        "soft-markers-6"],
-   ["Panel", "Transpose",  "[-|+]",                     41, 64,  v => panelSigned(v - 64),                      "soft-marker-c"],
-   ["Panel", "Pitch Ofst", "[-|+]",                     46, 64,  v => panelSigned(panelClamp(v - 64, -60, 60)), "soft-marker-c"],
+   null,
    ["Panel", "Play Pitch", "",                          44, 0,   v => panelPitchName(v),                        ""],
-   ["Panel", "Play Velo",  "",                          45, 100, v => String(v),                                ""]],
-  [["Seq", "Tempo",      "",                          48, 64,  v => String(panelClamp(v * 2 - 8, 30, 240)),     ""],
+   ["Panel", "Play Velo",  "",                          45, 100, v => String(v),                                ""],
+   ["Panel", "Scale",      "[Maj|Min|Mel|MaP|MiP|Chr]", 40, 0,   v => PANEL_SCALES[(v * 10 + 128) >> 8],        "soft-markers-6"],
+   ["Panel", "Pitch Ofst", "[-|+]",                     46, 64,  v => panelSigned(panelClamp(v - 64, -60, 60)), "soft-marker-c"],
+   ["Panel", "Transpose",  "[-|+]",                     41, 64,  v => panelSigned(v - 64),                      "soft-marker-c"]],
+  // B-04 to B-08
+  [["Seq", "Step Note",  "[4|8|16]",                  55, 64,  v => ["4", "8", "16"][(v * 4 + 128) >> 8],       "soft-markers-3"],
    ["Seq", "Clock Src",  "[Int|Ext]",                 49, 0,   v => ["Int", "Ext"][(v * 2 + 128) >> 8],         "soft-markers-2"],
-   ["Seq", "Step Note",  "[4|8|16]",                  55, 64,  v => ["4", "8", "16"][(v * 4 + 128) >> 8],       "soft-markers-3"],
+   ["Seq", "Pitch Ofst", "[-|+]",                     54, 64,  v => panelSigned(panelClamp(v - 64, -60, 60)),   "soft-marker-c"],
+   ["Seq", "T/Rx St/Sp", "[Off|On]",                  57, 0,   v => ["Off", "On"][(v * 2 + 128) >> 8],          "soft-markers-2"],
+   ["Seq", "Tempo",      "",                          48, 64,  v => String(panelClamp(v * 2 - 8, 30, 240)),     ""],
    ["Seq", "Gate Time",  "[1/6|2/6|3/6|4/6|5/6|6/6]", 50, 60,  v => ((v * 10 + 128) >> 8) + 1 + "/6",           "soft-markers-6"],
    ["Seq", "Mode",       "[Fwd|Rvs|Bnc]",             52, 0,   v => ["Fwd", "Rvs", "Bnc"][(v * 4 + 128) >> 8],  "soft-markers-3"],
    ["Seq", "Num Steps",  "",                          51, 32,  v => String(Math.max((v - 2) >> 2, 0) + 1),      ""],
-   ["Seq", "Pitch Ofst", "[-|+]",                     54, 64,  v => panelSigned(panelClamp(v - 64, -60, 60)),   "soft-marker-c"],
-   ["Seq", "T/Rx St/Sp", "[Off|On]",                  57, 0,   v => ["Off", "On"][(v * 2 + 128) >> 8],          "soft-markers-2"],
    ["Seq", "On Steps",   "",                          56, 127, v => panelHex2(v),                               ""],
    ["Seq", "Act Steps",  "",                          53, 127, v => panelHex2(v),                               ""]],
+  // B-10 to B-17
   [0, 1, 2, 3, 4, 5, 6, 7].flatMap(i => [["Seq", "Pitch " + i, "", 16 + i, [4, 22, 37, 57, 72, 89, 107, 124][i], v => panelPitchName(v), ""],
                                          ["Seq", "Velo " + i,  "", 24 + i, 100, v => String(v), ""]]),
 ];
-const PANEL_PARAMS = PANEL_PARAM_GROUPS.flat();
+const PANEL_PARAMS = PANEL_PARAM_GROUPS.flat().filter(p => p);
 const PANEL_ON_STEPS_CC = 56, PANEL_ACT_STEPS_CC = 53;
 const PANEL_OPERATIONS = [
   // Write (and its Undo) only: Read and Init of PRA32-U2 would change the parameters there, not in the editor
@@ -3973,7 +3978,15 @@ function setupPanel() {
   PANEL_PARAM_GROUPS.forEach((group, g) => {
     const div = document.createElement("div");
     div.className = "param-group";
-    group.forEach(([category, name, sup, cc, , , markers]) => {
+    group.forEach(p => {
+      if (!p) {  // An empty cell, as of PRA32-U2 Editor
+        const spacer = document.createElement("div");
+        spacer.className = "param-spacer";
+        spacer.setAttribute("aria-hidden", "true");
+        div.appendChild(spacer);
+        return;
+      }
+      const [category, name, sup, cc, , , markers] = p;
       const param = document.createElement("div");
       param.className = "param";
       param.innerHTML = `<div class="param-name"><b>${category}</b> ${name}${sup ? ` <span class="sup">${sup}</span>` : ""} <span class="cc">CC#${cc}</span></div>
