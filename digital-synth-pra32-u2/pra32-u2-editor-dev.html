@@ -818,9 +818,38 @@ span.cc {
   align-items: center;
   gap: 3px;
 }
+/* The check boxes drawn here, with a white check on the orange (the browser would draw a black one on a light color) */
 .panel-steps input[type="checkbox"] {
-  accent-color: var(--pra32-color);
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
   margin: 0;
+  border: 1px solid #767676;
+  border-radius: 2px;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+}
+.panel-steps input[type="checkbox"]:checked {
+  background: var(--pra32-color);
+  border-color: var(--pra32-color);
+}
+.panel-steps input[type="checkbox"]:checked::after {
+  content: "";
+  width: 3px;
+  height: 7px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.panel-steps input[type="checkbox"]:disabled {
+  background: #c8c8c8;
+  border-color: #c8c8c8;
+}
+.panel-steps input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--pra32-color-dark);
 }
 /* The 3 parts of Panel & Step Sequencer, each shown or hidden (shown by default), inside it */
 #panelDetails > details.panel-sub {
