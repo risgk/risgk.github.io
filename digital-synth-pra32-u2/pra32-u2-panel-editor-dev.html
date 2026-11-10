@@ -62,6 +62,11 @@ button:active:not(:disabled) {
   background: #ffd9c4;
   border-color: var(--pra32-color-dark);
 }
+button:disabled {
+  color: rgba(16, 16, 16, 0.3);
+  background: rgba(239, 239, 239, 0.3);
+  border-color: rgba(118, 118, 118, 0.3);
+}
 /* Play while on: as Hold of PRA32-U2 Editor */
 button.on {
   background: #ffd9c4;
@@ -372,7 +377,9 @@ span.cc {
 <div class="misc-group"><span>Actions</span><div class="misc-buttons">
 <button type="button" onclick="initValues()" title="Set the parameters to the initial values (and send them)">Initial</button>
 <button type="button" onclick="randomizeSteps(16)" title="Randomize Seq Pitch 0-7 (and send them)">Randomize Pitch</button>
-<button type="button" onclick="randomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them)">Randomize Velo</button></div></div>
+<button type="button" onclick="randomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them)">Randomize Velo</button>
+<button type="button" id="buttonUndo" onclick="undo()" title="Back to the parameters before the last change (Initial, Randomize, Import, or a move of a slider or a check box) (Ctrl+Z)">Undo</button>
+<button type="button" id="buttonRedo" onclick="redo()" title="Forward again to the parameters before Undo (Ctrl+Y or Ctrl+Shift+Z)">Redo</button></div></div>
 </div>
 <div class="section misc">
 <div class="misc-group"><span>File</span><div class="misc-buttons">
@@ -451,7 +458,6 @@ const OPERATIONS = [
   [103, "Read Panel Prms",  "Read the Panel Parameters from the flash of PRA32-U2"],
   [104, "Init Panel Prms",  "Set the Panel Parameters of PRA32-U2 to the defaults"],
   [105, "Undo Write",       "Bring back what the last Write replaced in the flash (on PRA32-U2)", true],
-  [106, "Undo Read",        "Bring back what the last Read replaced (on PRA32-U2)"],
 ];
 
 // The synths that PRA32-U2/M/P selects (Panel Synth): [name, the offset of the MIDI Channel from the Basic Channel]
@@ -526,6 +532,77 @@ function load() {
       Object.assign(settings, data.settings || {});
     }
   } catch (e) {}
+}
+
+// ---- Undo (as PRA32-U2 Editor) ----
+// The parameters before each change are kept (up to UNDO_MAX): Initial, Randomize, Import, and a move of a slider
+// (one by a drag, or by a key) or of a check box. Undo and Redo send the parameters that they change. (Undo Read of
+// PRA32-U2 is not here: it would change the parameters there, not in the editor)
+const UNDO_MAX = 200;
+let undoStack = [];
+let redoStack = [];
+let undoSliderBefore = null;  // the parameters before a drag of a slider (or a key on it), kept until it moves
+
+function pushUndo(before) {
+  undoStack.push(before);
+  if (undoStack.length > UNDO_MAX) { undoStack.shift(); }
+  redoStack = [];
+  updateUndoButton();
+}
+
+function setValues(newValues) {
+  for (const cc in newValues) {
+    if (values[cc] !== newValues[cc]) { sendCC(Number(cc), newValues[cc]); }
+  }
+  values = Object.assign({}, newValues);
+  updateDisplay();
+  save();
+}
+
+function undo() {
+  if (!undoStack.length) { return; }
+  redoStack.push(Object.assign({}, values));
+  setValues(undoStack.pop());
+  updateUndoButton();
+}
+
+function redo() {
+  if (!redoStack.length) { return; }
+  undoStack.push(Object.assign({}, values));
+  setValues(redoStack.pop());
+  updateUndoButton();
+}
+
+function updateUndoButton() {
+  document.getElementById("buttonUndo").disabled = (undoStack.length === 0);
+  document.getElementById("buttonRedo").disabled = (redoStack.length === 0);
+}
+
+function setupUndo() {
+  const isParamControl = e => e.matches && e.matches(".params input");
+  ["pointerdown", "keydown"].forEach(type => {
+    document.addEventListener(type, event => {
+      if (isParamControl(event.target) && !event.repeat) { undoSliderBefore = Object.assign({}, values); }
+    }, true);
+  });
+  document.addEventListener("input", event => {
+    if (isParamControl(event.target) && undoSliderBefore) {
+      pushUndo(undoSliderBefore);
+      undoSliderBefore = null;
+    }
+  }, true);
+  // Ctrl+Z (Command+Z on a Mac): Undo; Ctrl+Y or Ctrl+Shift+Z: Redo
+  document.addEventListener("keydown", event => {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) { return; }
+    if ((event.code === "KeyZ") && !event.shiftKey) {
+      event.preventDefault();
+      undo();
+    } else if ((event.code === "KeyY") || ((event.code === "KeyZ") && event.shiftKey)) {
+      event.preventDefault();
+      redo();
+    }
+  });
+  updateUndoButton();
 }
 
 // ---- UI ----
@@ -629,7 +706,7 @@ function sendCurrent() {
 }
 
 function initValues() {
-  if (!confirm("Set the parameters to the initial values?")) { return; }
+  pushUndo(Object.assign({}, values));
   values = defaultValues();
   updateDisplay();
   save();
@@ -639,6 +716,7 @@ function initValues() {
 // Randomizes Seq Pitch 0-7 (16) or Seq Velo 0-7 (24) in the editor, and sends them, so that the editor
 // shows the values (Seq Rand Pitch and Seq Rand Velo of PRA32-U2/P do it on PRA32-U2, not shown here)
 function randomizeSteps(firstCC) {
+  pushUndo(Object.assign({}, values));
   for (let i = 0; i < 8; i++) {
     values[firstCC + i] = Math.floor(Math.random() * 128);
     sendCC(firstCC + i, values[firstCC + i]);
@@ -663,6 +741,7 @@ function loadFile(event) {
   file.text().then(text => {
     const data = JSON.parse(text);
     if (!data.values) { throw new Error("no values"); }
+    pushUndo(Object.assign({}, values));
     values = defaultValues();
     for (const cc in data.values) {
       if (cc in values) { values[cc] = clamp(parseInt(data.values[cc]) || 0, 0, 127); }
@@ -750,6 +829,7 @@ window.addEventListener("load", () => {
   makeParams(document.getElementById("divSeqParams"), SEQ_PARAMS);
   makeSteps();
   makeOps();
+  setupUndo();
   onChangeBasicCh();
   onChangeModel();
   updateDisplay();
