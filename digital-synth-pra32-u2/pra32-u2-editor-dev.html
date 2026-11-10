@@ -393,9 +393,15 @@ details.section:not([open]) > summary {
    a heading divides the sections, and one followed by the parameters the groups); none at the bottom, as the line of
    the next one is there */
 .params-details {
-  border-top: 1px solid #c0c0c0;
+  border-top: 1px solid #e0e0e0;
   padding-top: 6px;
   margin-bottom: 0;
+}
+/* The lines above Synth Parameters, Panel & Step Sequencer, and the keyboard (the 3 large parts) as they are, and the others
+   (the groups, and the More Synth Parameters, the FX Parameters, and the parts of Panel & Step Sequencer) lighter, so that
+   they do not stand out */
+#synthDetails, #panelDetails {
+  border-top-color: #c0c0c0;
 }
 .params-details > summary {
   cursor: pointer;
@@ -427,7 +433,7 @@ span.cc {
    The names of a row share their height (subgrid), so the sliders of a row line up even if a name wraps */
 /* The lines to the right end of the container (the columns of the mode: 4: 920px, 2: 460px, 1: 230px) */
 .params {
-  border-top: 1px solid #c0c0c0;
+  border-top: 1px solid #e0e0e0;
 }
 .param-group {
   display: grid;
@@ -435,7 +441,7 @@ span.cc {
   column-gap: 0;
   row-gap: 0;
   padding: 6px 0;
-  border-bottom: 1px solid #c0c0c0;
+  border-bottom: 1px solid #e0e0e0;
 }
 .param-group:last-child {
   border-bottom: none;  /* no line at the bottom */
@@ -836,14 +842,6 @@ span.cc {
 }
 .panel-steps-ctrl input[type="checkbox"]:hover:not(:disabled) {
   border-color: var(--pra32-color-dark);
-}
-/* The lines inside Panel & Step Sequencer lighter than the others (the line above its heading as the others),
-   so that they do not stand out */
-#panelDetails details.panel-sub {
-  border-top-color: #e0e0e0;
-}
-#panelDetails .param-group {
-  border-bottom-color: #e0e0e0;
 }
 /* The 3 parts of Panel & Step Sequencer, each shown or hidden (shown by default), inside it */
 #panelDetails > details.panel-sub {
