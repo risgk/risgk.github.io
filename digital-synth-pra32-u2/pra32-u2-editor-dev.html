@@ -3588,11 +3588,11 @@ function getStoredCCValueString(index, number) {
 <div class="misc-group"><span>Panel Ch</span><div class="misc-buttons">
 <select id="selectPanelCh" onchange="onChangePanelCh()" title="The Panel Channel: the Basic Channel + 10 (11 with the Basic Channel 1, as PRA32-U2/M/P Web)"></select>
 <span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
-<button type="button" onclick="sendPanelCurrent()" title="Send the current panel parameters to the Panel Channel">Send Panel</button></div></div>
+<button type="button" onclick="sendPanelCurrent()" title="Send the current panel parameters to the Panel Channel">Send Panel</button>
+<button type="button" id="buttonPanelPlay" onclick="onClickPanelPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button></div></div>
 </div>
 <div class="section misc">
 <div class="misc-group"><span>Actions</span><div class="misc-buttons">
-<button type="button" id="buttonPanelPlay" onclick="onClickPanelPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button>
 <button type="button" onclick="panelInitValues()" title="Set the panel parameters to the initial values (and send them)">Initialize</button>
 <button type="button" onclick="panelRandomizeSteps(16)" title="Randomize Seq Pitch 0-7 (and send them)">Randomize Pitch</button>
 <button type="button" onclick="panelRandomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them)">Randomize Velo</button>
