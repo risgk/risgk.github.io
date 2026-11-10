@@ -819,6 +819,11 @@ span.cc {
   border-top: 1px solid #c0c0c0;
   padding-top: 6px;
 }
+/* The groups (and their buttons) as wide as their contents, so that Actions and Write (to Device) are in a row in every
+   Web browser (a group of the buttons that grows, as in Actions above, may take a whole row in some of them, e.g. Safari) */
+#panelDetails .misc-buttons {
+  flex: 0 1 auto;
+}
 #spanPanelTarget {
   margin-left: 12px;  /* apart from Panel Ch (16px with the gap), as the items of MIDI */
 }
@@ -3645,7 +3650,7 @@ function getStoredCCValueString(index, number) {
 </details>
 
 <details class="section params-details" id="panelDetails">
-<summary>Panel &amp; Step Sequencer <span class="cc">PRA32-U2/P and PRA32-U2/M/P Web, Experimental</span></summary>
+<summary>Panel &amp; Step Sequencer <span class="cc">PRA32-U2/P and PRA32-U2/M/P (Experimental)</span></summary>
 <div class="section misc" style="margin-top: 6px">
 <div class="misc-group"><span>Panel Ch</span><div class="misc-buttons">
 <select id="selectPanelCh" onchange="onChangePanelCh()" title="The Panel Channel: the Basic Channel + 10 (11 with the Basic Channel 1, as PRA32-U2/M/P Web)"></select>
