@@ -787,11 +787,18 @@ span.cc {
   font-weight: bold;
 }
 /* ---- Panel & Step Sequencer (Experimental) ---- */
+/* On Steps and Act Steps in a row, each as wide as 2 parameters (Act Steps from the middle, the 3rd column, in 4 columns),
+   and one above the other in 2 or 1 column */
 .panel-steps {
   grid-column: 1 / -1;
-  padding: 4px 1px 0;
+  padding: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
 }
 .panel-steps > div {
+  width: calc(var(--param-width) * 2);
+  max-width: 100%;
+  padding-left: 1px;  /* as the names of the parameters */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3905,7 +3912,7 @@ function panelUpdateDisplay() {
   }
   const play = document.getElementById("buttonPanelPlay");
   play.classList.toggle("kbd-hold-on", panelPlaying);
-  play.textContent = panelPlaying ? ((panelValues[42] >= 64) ? "Stop" : "Release") : "Play";
+  play.textContent = panelPlaying ? "Stop" : "Play";
 }
 
 function onClickPanelPlay() {
