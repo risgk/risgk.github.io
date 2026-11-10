@@ -3591,13 +3591,16 @@ function getStoredCCValueString(index, number) {
 <button type="button" onclick="sendPanelCurrent()" title="Send the current panel parameters to the Panel Channel">Send Panel</button></div></div>
 </div>
 <div class="section misc">
-<div class="misc-group"><span>Actions</span><div class="misc-buttons" id="divPanelOps">
+<div class="misc-group"><span>Actions</span><div class="misc-buttons">
 <button type="button" id="buttonPanelPlay" onclick="onClickPanelPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button>
 <button type="button" onclick="panelInitValues()" title="Set the panel parameters to the initial values (and send them)">Initialize</button>
 <button type="button" onclick="panelRandomizeSteps(16)" title="Randomize Seq Pitch 0-7 (and send them)">Randomize Pitch</button>
 <button type="button" onclick="panelRandomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them)">Randomize Velo</button>
 <button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Initialize, Randomize, or a move of a slider or a check box)">Undo</button>
 <button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo">Redo</button></div></div>
+</div>
+<div class="section misc">
+<div class="misc-group lbl-green" style="color:green"><span>Write <span>(to Device)</span></span><div class="misc-buttons" id="divPanelOps"></div></div>
 </div>
 <div class="params panel-params" id="divPanelParams"></div>
 </details>
@@ -3694,8 +3697,8 @@ const PANEL_PARAMS = PANEL_PARAM_GROUPS.flat();
 const PANEL_ON_STEPS_CC = 56, PANEL_ACT_STEPS_CC = 53;
 const PANEL_OPERATIONS = [
   // Write (and its Undo) only: Read and Init of PRA32-U2 would change the parameters there, not in the editor
-  [102, "Write Panel Prms", "Write the panel parameters of PRA32-U2 to its flash", true],
-  [105, "Undo Write",       "Bring back what the last Write replaced in the flash (on PRA32-U2)", true],
+  [102, "Panel Prms", "Write the panel parameters of PRA32-U2 (or PRA32-U2/M/P Web, until the page is closed) to its flash", true],
+  [105, "Undo Write", "Bring back what the last Write replaced in the flash of PRA32-U2", true],
 ];
 // The channels that PRA32-U2/M/P (and PRA32-U2/M/P Web) selects (Panel Target Ch): [name, the Basic Channel + this]
 const PANEL_TARGETS = [
@@ -3919,10 +3922,11 @@ function setupPanel() {
       // The check boxes of the steps 1-7 (On and Active), after Seq On Steps and Seq Act Steps
       const steps = document.createElement("div");
       steps.className = "panel-steps";
-      const row = (label, prefix, cc) => `<div><span>${label}</span>${[1, 2, 3, 4, 5, 6, 7].map(i =>
-        `<label><input type="checkbox" id="${prefix}${i}">${i}</label>`).join("")}</div>`;
+      // Step 0 is always On and Active (shown checked, and not changed)
+      const row = (label, prefix, cc) => `<div><span>${label}</span><label><input type="checkbox" checked disabled>0</label>${
+        [1, 2, 3, 4, 5, 6, 7].map(i => `<label><input type="checkbox" id="${prefix}${i}">${i}</label>`).join("")}</div>`;
       steps.innerHTML = row("On Steps", "panelOn", PANEL_ON_STEPS_CC) + row("Act Steps", "panelAct", PANEL_ACT_STEPS_CC);
-      steps.querySelectorAll("input").forEach(box => box.addEventListener("change", () => {
+      steps.querySelectorAll("input[id]").forEach(box => box.addEventListener("change", () => {
         panelPushUndo();
         panelOnChangeBits(box.id.startsWith("panelOn") ? PANEL_ON_STEPS_CC : PANEL_ACT_STEPS_CC, box.id.startsWith("panelOn") ? "panelOn" : "panelAct");
       }));
@@ -3936,9 +3940,10 @@ function setupPanel() {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = name;
+    b.style.color = "green";  // As Write (to Device) of the programs
     b.title = title + " (CC#" + cc + ")";
     b.addEventListener("click", () => {
-      if (confirmIt && !confirm(name + ": " + title + "?")) { return; }
+      if (confirmIt && !confirm(title + "?")) { return; }
       panelSendCC(cc, 0);
       panelSendCC(cc, 127);
     });
