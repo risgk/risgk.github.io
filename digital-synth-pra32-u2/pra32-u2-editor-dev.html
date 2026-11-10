@@ -3599,10 +3599,10 @@ function getStoredCCValueString(index, number) {
 <button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Initial, Randomize, or a move of a slider or a check box)">Undo</button>
 <button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo">Redo</button></div></div>
 </div>
-<div class="params panel-params" id="divPanelParams"></div>
-<div class="section misc" style="margin-top: 6px">
+<div class="section misc">
 <div class="misc-group"><span>Operations</span><div class="misc-buttons" id="divPanelOps"></div></div>
 </div>
+<div class="params panel-params" id="divPanelParams"></div>
 </details>
 
 <details class="section" id="kbdDetails" open>
@@ -3696,10 +3696,8 @@ const PANEL_PARAM_GROUPS = [
 const PANEL_PARAMS = PANEL_PARAM_GROUPS.flat();
 const PANEL_ON_STEPS_CC = 56, PANEL_ACT_STEPS_CC = 53;
 const PANEL_OPERATIONS = [
-  // Write and then Read, as the pages of the panel (C and D)
+  // Write (and its Undo) only: Read and Init of PRA32-U2 would change the parameters there, not in the editor
   [102, "Write Panel Prms", "Write the panel parameters of PRA32-U2 to its flash", true],
-  [103, "Read Panel Prms",  "Read the panel parameters from the flash of PRA32-U2"],
-  [104, "Init Panel Prms",  "Set the panel parameters of PRA32-U2 to the defaults"],
   [105, "Undo Write",       "Bring back what the last Write replaced in the flash (on PRA32-U2)", true],
 ];
 // The channels that PRA32-U2/M/P (and PRA32-U2/M Web) selects (Panel Target Ch): [name, the Basic Channel + this]
