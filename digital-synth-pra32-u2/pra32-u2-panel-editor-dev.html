@@ -278,13 +278,16 @@ span.cc {
 .param-group:last-child {
   border-bottom: none;
 }
+.param-group.two-cols {
+  grid-template-columns: repeat(2, var(--param-width));
+}
 @container (max-width: 919px) {
   .param-group {
     grid-template-columns: repeat(2, var(--param-width));
   }
 }
 @container (max-width: 459px) {
-  .param-group {
+  .param-group, .param-group.two-cols {
     grid-template-columns: var(--param-width);
   }
   .misc-group > span:first-child {
@@ -446,9 +449,11 @@ const SEQ_PARAMS = [
    // a slider (as a knob of the panel) goes through the patterns, as well as the check boxes below
    ["Seq", "On Steps",   "",                          56, 127, v => hex2(v)],
    ["Seq", "Act Steps",  "",                          53, 127, v => hex2(v)]],
-  [0, 1, 2, 3, 4, 5, 6, 7].map(i => ["Seq", "Pitch " + i, "", 16 + i, [4, 22, 37, 57, 72, 89, 107, 124][i], v => pitchName(v)]),
-  [0, 1, 2, 3, 4, 5, 6, 7].map(i => ["Seq", "Velo " + i,  "", 24 + i, 100, v => String(v)]),
+  // The steps in 2 columns (Seq Pitch N and Seq Velo N in a row), as a table of the steps
+  [0, 1, 2, 3, 4, 5, 6, 7].flatMap(i => [["Seq", "Pitch " + i, "", 16 + i, [4, 22, 37, 57, 72, 89, 107, 124][i], v => pitchName(v)],
+                                         ["Seq", "Velo " + i,  "", 24 + i, 100, v => String(v)]]),
 ];
+const TWO_COLUMN_GROUPS = [SEQ_PARAMS[1]];
 const ON_STEPS_CC = 56, ACT_STEPS_CC = 53;
 const ALL_PARAMS = PANEL_PARAMS.concat(SEQ_PARAMS).flat();
 
@@ -614,7 +619,7 @@ function updateFill(input) {
 function makeParams(container, groups) {
   groups.forEach(group => {
     const div = document.createElement("div");
-    div.className = "param-group";
+    div.className = "param-group" + (TWO_COLUMN_GROUPS.includes(group) ? " two-cols" : "");
     group.forEach(([category, name, sup, cc]) => {
       const param = document.createElement("div");
       param.className = "param";
