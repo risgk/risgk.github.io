@@ -3968,6 +3968,14 @@ function panelUpdateTargetOptions() {
 function setupPanel() {
   panelLoad();
 
+  // Shown or hidden as at the last time (hidden by default), as Store & File
+  const details = document.getElementById("panelDetails");
+  try { details.open = (localStorage.getItem("keyPanelOpen") === "1"); } catch (e) {}
+  details.addEventListener("toggle", () => {
+    try { localStorage.setItem("keyPanelOpen", details.open ? "1" : "0"); } catch (e) {}
+    if (typeof fitLayout === "function") { fitLayout(); }
+  });
+
   const ch = document.getElementById("selectPanelCh");
   for (let i = 1; i <= 16; i++) { const o = document.createElement("option"); o.textContent = i; ch.appendChild(o); }
   ch.selectedIndex = panelSettings.panelCh;
