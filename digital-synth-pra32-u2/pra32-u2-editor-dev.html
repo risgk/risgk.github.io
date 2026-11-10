@@ -828,9 +828,6 @@ span.cc {
 }
 /* The groups (and their buttons) as wide as their contents, so that Actions and Write (to Device) are in a row in every
    Web browser (a group of the buttons that grows, as in Actions above, may take a whole row in some of them, e.g. Safari) */
-#panelDetails .misc-group.lbl-green > span:first-child {
-  min-width: 0;  /* Write (to Device), next to Store */
-}
 #panelDetails .misc-buttons {
   flex: 0 1 auto;
 }
@@ -3675,14 +3672,17 @@ function getStoredCCValueString(index, number) {
 <button type="button" onclick="panelRandomizeSteps(16)">Seq Randomize Pitch</button>
 <button type="button" onclick="panelRandomizeSteps(24)">Seq Randomize Velo</button>
 <button type="button" onclick="panelInitValues()">Initialize</button>
-<button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Seq Randomize Pitch/Velo, Initialize, Recall, or a move of a slider or a check box) (Ctrl+Z, with the focus here)">Undo</button>
+<button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Seq Randomize Pitch/Velo, Initialize, User Preset, Import, or a move of a slider or a check box) (Ctrl+Z, with the focus here)">Undo</button>
 <button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo (Ctrl+Y or Ctrl+Shift+Z, with the focus here)">Redo</button></div></div>
 </div>
 <div class="section misc">
-<div class="misc-group"><span>Browser</span><div class="misc-buttons">
-<button type="button" id="buttonPanelRecall" onclick="panelRecall()">Recall</button>
-<button type="button" id="buttonPanelStore" onclick="panelStore()">Store</button></div></div>
-<div class="misc-group lbl-green" style="color:green"><span>Write <span>(to Device)</span></span><div class="misc-buttons" id="divPanelOps"></div></div>
+<div class="misc-group"><span>Store &amp; File</span><div class="misc-buttons">
+<button type="button" id="buttonPanelRecall" onclick="panelRecall()">User Preset (from Browser)</button>
+<button type="button" id="buttonPanelStore" onclick="panelStore()">Store (to Browser)</button>
+<input type="file" id="filePanelImport" style="display:none" accept=".json">
+<button type="button" onclick="document.getElementById('filePanelImport').click()">Import</button>
+<button type="button" onclick="panelExport()">Export</button>
+<span id="divPanelOps" style="display:contents"></span></div></div>
 </div>
 <div class="params panel-params" id="divPanelParams"></div>
 </details>
@@ -3785,7 +3785,7 @@ const PANEL_PARAMS = PANEL_PARAM_GROUPS.flat().filter(p => p);
 const PANEL_ON_STEPS_CC = 56, PANEL_ACT_STEPS_CC = 53;
 const PANEL_OPERATIONS = [
   // Write (and its Undo) only: Read and Init of PRA32-U2 would change the parameters there, not in the editor
-  [102, "Panel Prms", "Write the panel parameters of PRA32-U2 (or PRA32-U2/M/P Web, until the page is closed) to its flash", true],
+  [102, "Write (to Device)", "Write the panel parameters of PRA32-U2 (or PRA32-U2/M/P Web, until the page is closed) to its flash", true],
   [105, "Undo Write", "Bring back what the last Write replaced in the flash of PRA32-U2", true],
 ];
 // The channels that PRA32-U2/M/P (and PRA32-U2/M/P Web) selects (Panel Target Ch): [name, the Basic Channel + this]
@@ -3980,7 +3980,7 @@ function panelUpdateTargetOptions() {
   select.selectedIndex = panelSettings.target;
 }
 
-// The panel parameters kept in the browser (one set): Store keeps the current ones, and Recall sets them in the editor
+// The panel parameters kept in the browser (one set): Store keeps the current ones, and User Preset sets them in the editor
 // and sends them (Undo can bring back those before)
 const PANEL_MEMORY_KEY = "keyPanelMemory";
 
@@ -4012,8 +4012,36 @@ function panelStore() {
   panelUpdateMemoryButtons();
 }
 
+// File: the panel parameters exported to a JSON file ("pra32-u2-panel.json"), and imported from it (and sent)
+function panelExport() {
+  const data = { format: "PRA32-U2 Panel Parameters", values: panelValues };
+  const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "pra32-u2-panel.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function panelImport(event) {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (!file) { return; }
+  file.text().then(text => {
+    const data = JSON.parse(text);
+    if (!data || !data.values) { throw new Error("no panel parameters"); }
+    panelPushUndo();
+    const values = panelDefaultValues();
+    for (const cc in data.values) {
+      if (cc in values) { values[cc] = panelClamp(parseInt(data.values[cc]) || 0, 0, 127); }
+    }
+    panelSetValues(values);
+  }).catch(e => alert("Could not import the file: " + e.message));
+}
+
 function setupPanel() {
   panelLoad();
+  document.getElementById("filePanelImport").addEventListener("change", panelImport);
 
   panelUpdateMemoryButtons();
 
