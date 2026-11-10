@@ -3648,16 +3648,16 @@ function getStoredCCValueString(index, number) {
 <summary>Panel &amp; Step Sequencer (Experimental) <span class="cc">for PRA32-U2/P and PRA32-U2/M/P</span></summary>
 <div class="section misc" style="margin-top: 6px">
 <div class="misc-group"><span>Panel Ch</span><div class="misc-buttons">
-<select id="selectPanelCh" onchange="onChangePanelCh()" title="The Panel Channel: the Basic Channel + 10 (11 with the Basic Channel 1, as PRA32-U2/M/P Web)"></select>
+<select id="selectPanelCh" onchange="onChangePanelCh()"></select>
 <span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
-<button type="button" onclick="sendPanelCurrent()" title="Send the current panel parameters to the Panel Channel">Send Panel</button>
+<button type="button" onclick="sendPanelCurrent()">Send Panel</button>
 <button type="button" id="buttonPanelPlay" onclick="onClickPanelPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button></div></div>
 </div>
 <div class="section misc">
 <div class="misc-group"><span>Actions</span><div class="misc-buttons">
-<button type="button" onclick="panelRandomizeSteps(16)" title="Randomize Seq Pitch 0-7 (and send them), as Seq Rand Pitch of the panel">Seq Randomize Pitch</button>
-<button type="button" onclick="panelRandomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them), as Seq Rand Velo of the panel">Seq Randomize Velo</button>
-<button type="button" onclick="panelInitValues()" title="Set the panel parameters to the initial values (and send them)">Initialize</button>
+<button type="button" onclick="panelRandomizeSteps(16)">Seq Randomize Pitch</button>
+<button type="button" onclick="panelRandomizeSteps(24)">Seq Randomize Velo</button>
+<button type="button" onclick="panelInitValues()">Initialize</button>
 <button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Seq Randomize Pitch/Velo, Initialize, or a move of a slider or a check box)">Undo</button>
 <button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo">Redo</button></div></div>
 <div class="misc-group lbl-green" style="color:green"><span>Write <span>(to Device)</span></span><div class="misc-buttons" id="divPanelOps"></div></div>
@@ -4022,7 +4022,6 @@ function setupPanel() {
     b.type = "button";
     b.textContent = name;
     b.style.color = "green";  // As Write (to Device) of the programs
-    b.title = title + " (CC#" + cc + ")";
     b.addEventListener("click", () => {
       if (confirmIt && !confirm(title + "?")) { return; }
       panelSendCC(cc, 0);
