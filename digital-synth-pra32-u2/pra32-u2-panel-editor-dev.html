@@ -39,8 +39,9 @@ button.on { background: var(--pra32-color); border-color: var(--pra32-color-dark
 button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible {
   outline: 2px solid var(--pra32-color); outline-offset: 1px;
 }
-/* The parameters in 4 columns (as PRA32-U2 Editor, 230px each), or in 2 columns on a narrower screen */
-.params { display: grid; grid-template-columns: repeat(2, minmax(0, 230px)); gap: 6px 8px; }
+/* The parameters in 4, 2, or 1 columns by the width of the screen (as PRA32-U2 Editor, 230px each) */
+.params { display: grid; grid-template-columns: minmax(0, 230px); gap: 6px 8px; }
+@media (min-width: 476px) { .params { grid-template-columns: repeat(2, 230px); } }
 @media (min-width: 960px) { .params { grid-template-columns: repeat(4, 230px); } }
 .params > div { min-width: 0; }
 .param-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -80,6 +81,7 @@ table.steps { border-collapse: collapse; }
 table.steps th, table.steps td { padding: 3px 8px 3px 0; text-align: left; white-space: nowrap; }
 table.steps th { font-weight: normal; color: #666; }
 table.steps td.c { text-align: center; }
+table.steps th:last-child, table.steps td:last-child { padding-right: 0; }
 table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: bold; }
 .ops button { min-width: 112px; }
 @media (pointer: coarse) {
@@ -90,6 +92,11 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 @media (max-width: 520px) {
   table.steps input[type="range"] { width: 72px; }
   table.steps th, table.steps td { padding-right: 4px; }
+}
+@media (max-width: 359px) {
+  table.steps input[type="range"] { width: 48px; }
+  table.steps th, table.steps td { padding-right: 2px; }
+  table.steps .label { min-width: 32px; }
 }
 </style>
 </head>
