@@ -828,12 +828,8 @@ span.cc {
 }
 /* The groups (and their buttons) as wide as their contents, so that Actions and Write (to Device) are in a row in every
    Web browser (a group of the buttons that grows, as in Actions above, may take a whole row in some of them, e.g. Safari) */
-/* The labels as wide as "Recall (from Browser)", so that the buttons of the rows start at the same column */
-#panelDetails .misc-group > span:first-child {
-  min-width: 132px;
-}
 #panelDetails .misc-group.lbl-green > span:first-child {
-  min-width: 0;  /* Write (to Device), next to Actions */
+  min-width: 0;  /* Write (to Device), next to Store */
 }
 #panelDetails .misc-buttons {
   flex: 0 1 auto;
@@ -3681,13 +3677,12 @@ function getStoredCCValueString(index, number) {
 <button type="button" onclick="panelInitValues()">Initialize</button>
 <button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Seq Randomize Pitch/Velo, Initialize, Recall, or a move of a slider or a check box) (Ctrl+Z, with the focus here)">Undo</button>
 <button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo (Ctrl+Y or Ctrl+Shift+Z, with the focus here)">Redo</button></div></div>
+</div>
+<div class="section misc">
+<div class="misc-group"><span>Browser</span><div class="misc-buttons">
+<button type="button" id="buttonPanelRecall" onclick="panelRecall()">Recall</button>
+<button type="button" id="buttonPanelStore" onclick="panelStore()">Store</button></div></div>
 <div class="misc-group lbl-green" style="color:green"><span>Write <span>(to Device)</span></span><div class="misc-buttons" id="divPanelOps"></div></div>
-</div>
-<div class="section misc">
-<div class="misc-group"><span>Recall (from Browser)</span><div class="misc-buttons" id="divPanelRecall"></div></div>
-</div>
-<div class="section misc">
-<div class="misc-group"><span>Store (to Browser)</span><div class="misc-buttons" id="divPanelStore"></div></div>
 </div>
 <div class="params panel-params" id="divPanelParams"></div>
 </details>
@@ -3985,34 +3980,24 @@ function panelUpdateTargetOptions() {
   select.selectedIndex = panelSettings.target;
 }
 
-// The panel parameters kept in the browser (#0-7, with names), as the User Presets of the synth parameters:
-// Recall sets them in the editor and sends them; Store keeps the current ones
-const PANEL_MEMORY_MAX = 7;
+// The panel parameters kept in the browser (one set): Store keeps the current ones, and Recall sets them in the editor
+// and sends them (Undo can bring back those before)
+const PANEL_MEMORY_KEY = "keyPanelMemory";
 
-function panelMemoryKey(number) { return "keyPanelMemory" + number; }
-
-function panelGetMemory(number) {
+function panelGetMemory() {
   try {
-    const data = JSON.parse(localStorage.getItem(panelMemoryKey(number)));
+    const data = JSON.parse(localStorage.getItem(PANEL_MEMORY_KEY));
     if (data && data.values) { return data; }
   } catch (e) {}
   return null;
 }
 
 function panelUpdateMemoryButtons() {
-  for (let number = 0; number <= PANEL_MEMORY_MAX; number++) {
-    const data = panelGetMemory(number);
-    const text = "#" + number + " " + ((data && data.name) ? data.name : "---");
-    ["buttonPanelRecall", "buttonPanelStore"].forEach(id => {
-      const button = document.getElementById(id + number);
-      button.textContent = text;
-      button.style.color = data ? "" : "#a0a0a0";
-    });
-  }
+  document.getElementById("buttonPanelRecall").disabled = !panelGetMemory();
 }
 
-function panelRecall(number) {
-  const data = panelGetMemory(number);
+function panelRecall() {
+  const data = panelGetMemory();
   if (!data) { return; }
   panelPushUndo();
   const values = panelDefaultValues();
@@ -4022,38 +4007,14 @@ function panelRecall(number) {
   panelSetValues(values);
 }
 
-function panelStore(number) {
-  const data = panelGetMemory(number);
-  let name = data ? (data.name || "") : "";
-  let message = "";
-  while (true) {
-    name = prompt(message + "Store the current panel parameters to #" + number + " (in the browser)?\n" +
-                  "Name (up to " + USER_PRESET_NAME_LENGTH_MAX + " ASCII letters, digits, and symbols):", name);
-    if (name == null) { return; }
-    const normalized = normalizeUserPresetName(name);
-    if (normalized == name.trim()) { break; }
-    name = normalized;
-    message = "Only up to " + USER_PRESET_NAME_LENGTH_MAX + " ASCII letters, digits, and symbols can be used.\n";
-  }
-  try {
-    localStorage.setItem(panelMemoryKey(number), JSON.stringify({ name: normalizeUserPresetName(name), values: panelValues }));
-  } catch (e) {}
+function panelStore() {
+  try { localStorage.setItem(PANEL_MEMORY_KEY, JSON.stringify({ values: panelValues })); } catch (e) {}
   panelUpdateMemoryButtons();
 }
 
 function setupPanel() {
   panelLoad();
 
-  ["Recall", "Store"].forEach(kind => {
-    const div = document.getElementById("divPanel" + kind);
-    for (let number = 0; number <= PANEL_MEMORY_MAX; number++) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.id = "buttonPanel" + kind + number;
-      b.addEventListener("click", () => (kind === "Recall") ? panelRecall(number) : panelStore(number));
-      div.appendChild(b);
-    }
-  });
   panelUpdateMemoryButtons();
 
   // Shown or hidden as at the last time (hidden by default), as Store & File
