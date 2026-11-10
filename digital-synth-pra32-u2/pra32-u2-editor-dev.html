@@ -225,7 +225,7 @@ input[type="range"]:not(.ready)::-moz-range-thumb {
   max-width: 100%;
 }
 /* Send Current on the heading of MIDI, shown with MIDI hidden too (as Send Panel and Play on the heading of
-   Panel Ch & Operations), so that it is always at hand */
+   Panel CC Ch & Operations), so that it is always at hand */
 .midi-buttons button {
   height: var(--button-height);
   padding: 1px 5px;
@@ -239,7 +239,7 @@ input[type="range"]:not(.ready)::-moz-range-thumb {
 .midi-bar .midi-buttons {
   display: inline-flex;
   gap: 4px;
-  margin-left: 16px;  /* apart from MIDI (24px with the gap), as Send Panel from Panel Ch & Operations */
+  margin-left: 16px;  /* apart from MIDI (24px with the gap), as Send Panel from Panel CC Ch & Operations */
 }
 .midi-item select {
   min-width: 0;
@@ -785,16 +785,13 @@ span.cc {
   font-weight: bold;
 }
 /* ---- Panel & Step Sequencer (Experimental) ---- */
-/* A little more yellow than the orange of PRA32-U2, so that this section (of the panel, not of the synth) is told apart */
+/* Amber, not the orange of PRA32-U2, so that this section (of the panel, not of the synth) is told apart */
 #panelDetails {
-  --pra32-color: rgb(255,140,0);
-  --pra32-color-dark: rgb(196,108,0);
+  --pra32-color: rgb(255,191,0);
+  --pra32-color-dark: rgb(196,147,0);
 }
-/* The check boxes of the steps beside Seq On Steps, and beside Seq Act Steps on the next row
-   (below them in 1 column) */
-.panel-steps-row-start {
-  grid-column-start: 1;
-}
+/* The check boxes of the steps beside Seq On Steps and Seq Act Steps (the 4 in a row in 4 columns, 2 rows in 2 columns,
+   and each below its slider in 1 column) */
 .panel-steps-ctrl {
   padding: 1px;
   display: flex;
@@ -857,7 +854,7 @@ span.cc {
   border-top: 1px solid #e0e0e0;  /* a line above it, as above Panel Parameters and Step Sequencer Parameters */
   padding-top: 6px;
 }
-/* Send Panel and Play in the heading, so that they are shown with Panel Ch & Operations hidden too */
+/* Send Panel and Play in the heading, so that they are shown with Panel CC Ch & Operations hidden too */
 .panel-summary-buttons {
   margin-left: 24px;
   font-weight: normal;
@@ -874,7 +871,7 @@ span.cc {
   flex: 0 1 auto;
 }
 #spanPanelTarget {
-  margin-left: 12px;  /* apart from Panel Ch (16px with the gap), as the items of MIDI */
+  margin-left: 12px;  /* apart from Panel CC Ch (16px with the gap), as the items of MIDI */
 }
 #spanPanelTarget select {
   max-width: 100%;
@@ -3702,10 +3699,10 @@ function getStoredCCValueString(index, number) {
 <details class="section params-details" id="panelDetails">
 <summary>Panel &amp; Step Sequencer (Experimental) <span class="cc">for PRA32-U2/P and PRA32-U2/M/P</span></summary>
 <details class="section panel-sub" id="panelCtrlDetails" open>
-<summary>Panel Ch &amp; Operations <span class="panel-summary-buttons" onclick="event.preventDefault()"><button type="button" onclick="sendPanelCurrent()">Send Panel</button>
+<summary>Panel CC Ch &amp; Operations <span class="panel-summary-buttons" onclick="event.preventDefault()"><button type="button" onclick="sendPanelCurrent()">Send Panel</button>
 <button type="button" id="buttonPanelPlay" onclick="onClickPanelPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button></span></summary>
 <div class="section misc">
-<div class="misc-group"><span>Panel Ch</span><div class="misc-buttons">
+<div class="misc-group"><span>Panel CC Ch</span><div class="misc-buttons">
 <select id="selectPanelCh" onchange="onChangePanelCh()"></select>
 <span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
 </div></div>
@@ -4132,7 +4129,7 @@ function setupPanel() {
       }
       const [category, name, sup, cc, , , markers] = p;
       const param = document.createElement("div");
-      param.className = (cc === PANEL_ACT_STEPS_CC) ? "param panel-steps-row-start" : "param";
+      param.className = "param";
       param.innerHTML = `<div class="param-name"><b>${category}</b> ${name}${sup ? ` <span class="sup">${sup}</span>` : ""} <span class="cc">CC#${cc}</span></div>
         <div class="param-ctrl ${markers}"><input id="inputPanel${cc}" type="range" min="0" max="127" step="1" aria-label="${category} ${name}"><span id="spanPanel${cc}">-</span><span id="span2Panel${cc}">-</span></div>`;
       const input = param.querySelector("input");
