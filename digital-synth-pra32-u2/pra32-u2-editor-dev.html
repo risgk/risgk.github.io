@@ -3583,10 +3583,10 @@ function getStoredCCValueString(index, number) {
 </details>
 
 <details class="section params-details" id="panelDetails">
-<summary>Panel &amp; Step Sequencer <span class="cc">PRA32-U2/P and PRA32-U2/M Web, Experimental</span></summary>
+<summary>Panel &amp; Step Sequencer <span class="cc">PRA32-U2/P and PRA32-U2/M/P Web, Experimental</span></summary>
 <div class="section misc" style="margin-top: 6px">
 <div class="misc-group"><span>Panel Ch</span><div class="misc-buttons">
-<select id="selectPanelCh" onchange="onChangePanelCh()" title="The Panel Channel: the Basic Channel + 10 (11 with the Basic Channel 1, as PRA32-U2/M Web)"></select>
+<select id="selectPanelCh" onchange="onChangePanelCh()" title="The Panel Channel: the Basic Channel + 10 (11 with the Basic Channel 1, as PRA32-U2/M/P Web)"></select>
 <span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
 <button type="button" onclick="sendPanelCurrent()" title="Send the current panel parameters to the Panel Channel">Send Panel</button></div></div>
 </div>
@@ -3658,7 +3658,7 @@ Off <input type="number" id="inputNoteOffVelocity" min="1" max="127" step="1"></
 </div>
 
 <script>
-// ---- Panel & Step Sequencer (Experimental): the panel parameters of PRA32-U2/P (and PRA32-U2/M/P), and of PRA32-U2/M Web,
+// ---- Panel & Step Sequencer (Experimental): the panel parameters of PRA32-U2/P (and PRA32-U2/M/P), and of PRA32-U2/M/P Web,
 // by the Control Changes on the Panel Channel (the Basic Channel + 10; see "Panel Channel" in README-PRA32-U2-P.md).
 // The editor keeps the values (in the browser), and sends them (nothing comes back);
 // the panel parameters have an Undo of their own (not Ctrl+Z, which is that of the synth parameters) ----
@@ -3697,7 +3697,7 @@ const PANEL_OPERATIONS = [
   [102, "Write Panel Prms", "Write the panel parameters of PRA32-U2 to its flash", true],
   [105, "Undo Write",       "Bring back what the last Write replaced in the flash (on PRA32-U2)", true],
 ];
-// The channels that PRA32-U2/M/P (and PRA32-U2/M Web) selects (Panel Target Ch): [name, the Basic Channel + this]
+// The channels that PRA32-U2/M/P (and PRA32-U2/M/P Web) selects (Panel Target Ch): [name, the Basic Channel + this]
 const PANEL_TARGETS = [
   ["Main Synth", 0], ["Sub Synth 1", 1], ["Sub Synth 2", 2], ["Sub Synth 3", 3],
   ["Round Robin (2 notes: Main, Sub 1)", 6], ["Round Robin (2 notes: Sub 2, 3)", 7], ["Round Robin (2 notes x 2, layered)", 8],
