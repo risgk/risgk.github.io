@@ -469,10 +469,10 @@ const OPERATIONS = [
 const M_SYNTHS = [
   ["Main Synth", 0], ["Sub Synth 1", 1], ["Sub Synth 2", 2], ["Sub Synth 3", 3],
   ["Round Robin (2 notes: Main, Sub 1)", 6], ["Round Robin (2 notes: Sub 2, 3)", 7], ["Round Robin (2 notes x 2, layered)", 8],
-  ["Round Robin (3 notes: Sub 1-3)", -5], ["Round Robin (4 notes)", -4],
-  ["Layering (Main, Sub 1)", -3], ["Layering (Sub 2, 3)", -2], ["Layering (all 4)", -1],
+  ["Round Robin (3 notes: Sub 1-3)", 11], ["Round Robin (4 notes)", 12],
+  ["Layering (Main, Sub 1)", 13], ["Layering (Sub 2, 3)", 14], ["Layering (all 4)", 15],
 ];
-function targetChValue() { return (M_SYNTHS[settings.synth][1] + 16) & 0x0F; }  // CC#58: the Basic Channel + this
+function targetChValue() { return M_SYNTHS[settings.synth][1]; }  // CC#58: the Basic Channel + this
 
 const STORAGE_KEY = "keyPRA32U2PanelEditor";
 
@@ -790,7 +790,7 @@ function updateSynthOptions() {
   select.innerHTML = "";
   M_SYNTHS.forEach(([name, offset], i) => {
     const o = document.createElement("option");
-    o.textContent = `Basic Ch ${offset < 0 ? "- " + (-offset) : "+ " + offset}: ${name} (Ch ${((settings.basicCh + offset + 16) & 0x0F) + 1})`;
+    o.textContent = `Basic Ch + ${offset}: ${name} (Ch ${((settings.basicCh + offset) & 0x0F) + 1})`;
     select.appendChild(o);
   });
   select.selectedIndex = settings.synth;
