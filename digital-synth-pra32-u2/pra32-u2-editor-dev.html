@@ -851,13 +851,21 @@ span.cc {
 .panel-steps input[type="checkbox"]:hover:not(:disabled) {
   border-color: var(--pra32-color-dark);
 }
+/* The lines inside Panel & Step Sequencer lighter than the others (the line above its heading as the others),
+   so that they do not stand out */
+#panelDetails details.panel-sub {
+  border-top-color: #e0e0e0;
+}
+#panelDetails .param-group {
+  border-bottom-color: #e0e0e0;
+}
 /* The 3 parts of Panel & Step Sequencer, each shown or hidden (shown by default), inside it */
 #panelDetails > details.panel-sub {
   margin-left: 0;
 }
 #panelCtrlDetails {
   margin-top: 6px;
-  border-top: 1px solid #c0c0c0;  /* a line above it, as above Panel Parameters and Step Sequencer Parameters */
+  border-top: 1px solid #e0e0e0;  /* a line above it, as above Panel Parameters and Step Sequencer Parameters */
   padding-top: 6px;
 }
 #panelCtrlDetails > .section:last-child {
