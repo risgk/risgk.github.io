@@ -104,8 +104,6 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 <body>
 <h1>PRA32-U2/P Panel Editor <span class="sub">(Experimental)</span></h1>
 <div class="rule"></div>
-<div class="note warn"><b>Experimental:</b> this editor and the Panel Channel of PRA32-U2/P may change (or be removed) in a later version.
-  The Panel Channel needs <code>#define PRA32_U2_USE_PANEL_CHANNEL</code> (disabled by default) in the sketch of PRA32-U2/P.</div>
 
 <details open>
 <summary>MIDI</summary>
@@ -139,6 +137,11 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 </details>
 
 <details open>
+<summary>Operations (to Device)</summary>
+<div class="row ops" id="divOps"></div>
+</details>
+
+<details open>
 <summary>Play</summary>
 <div class="row">
   <button id="buttonPlay" onclick="onClickPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button>
@@ -162,10 +165,6 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 </div>
 </details>
 
-<details open>
-<summary>Operations (to Device)</summary>
-<div class="row ops" id="divOps"></div>
-</details>
 
 
 <script>
@@ -214,7 +213,6 @@ const OPERATIONS = [
   [107, "Seq Rand Pitch",   "Randomize Seq Pitch 0-7 (on PRA32-U2)"],
   [108, "Seq Rand Velo",    "Randomize Seq Velo 0-7 (on PRA32-U2)"],
   [109, "Panic",            "All Sound Off and Reset All Controllers (the synth selected)"],
-  [110, "Randomize Synth",  "Randomize the synth parameters (the synth selected)"],
 ];
 
 // The synths that PRA32-U2/M/P selects (Panel Synth): [name, the offset of the MIDI Channel from the Basic Channel]
