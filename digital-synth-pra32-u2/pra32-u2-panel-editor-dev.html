@@ -208,11 +208,12 @@ const DEFAULT_SEQ_PITCH = [4, 22, 37, 57, 72, 89, 107, 124];
 const DEFAULT_SEQ_VELO  = [100, 100, 100, 100, 100, 100, 100, 100];
 
 const OPERATIONS = [
-  [102, "Read Panel Prms",  "Read the Panel Parameters from the flash of PRA32-U2"],
-  [103, "Init Panel Prms",  "Set the Panel Parameters of PRA32-U2 to the defaults"],
-  [104, "Write Panel Prms", "Write the Panel Parameters of PRA32-U2 to its flash", true],
-  [105, "Undo Read",        "Bring back what the last Read replaced (on PRA32-U2)"],
-  [106, "Undo Write",       "Bring back what the last Write replaced in the flash (on PRA32-U2)", true],
+  // Write and then Read, as the pages of the panel (C and D)
+  [102, "Write Panel Prms", "Write the Panel Parameters of PRA32-U2 to its flash", true],
+  [103, "Read Panel Prms",  "Read the Panel Parameters from the flash of PRA32-U2"],
+  [104, "Init Panel Prms",  "Set the Panel Parameters of PRA32-U2 to the defaults"],
+  [105, "Undo Write",       "Bring back what the last Write replaced in the flash (on PRA32-U2)", true],
+  [106, "Undo Read",        "Bring back what the last Read replaced (on PRA32-U2)"],
 ];
 
 // The synths that PRA32-U2/M/P selects (Panel Synth): [name, the offset of the MIDI Channel from the Basic Channel]
