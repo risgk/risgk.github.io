@@ -224,8 +224,8 @@ input[type="range"]:not(.ready)::-moz-range-thumb {
   min-width: 0;
   max-width: 100%;
 }
-/* Send Current next to MIDI Out (to the output): on the bar of MIDI instead, while MIDI is hidden
-   (as Panic on the bar of the keyboard, which is always in the window), so that it is always at hand */
+/* Send Current on the heading of MIDI, shown with MIDI hidden too (as Send Panel and Play on the heading of
+   Panel Ch & Operations), so that it is always at hand */
 .midi-buttons button {
   height: var(--button-height);
   padding: 1px 5px;
@@ -239,9 +239,7 @@ input[type="range"]:not(.ready)::-moz-range-thumb {
 .midi-bar .midi-buttons {
   display: inline-flex;
   gap: 4px;
-}
-#midiDetails[open] > .midi-bar .midi-buttons {
-  display: none;
+  margin-left: 16px;  /* apart from MIDI (24px with the gap), as Send Panel from Panel Ch & Operations */
 }
 .midi-item select {
   min-width: 0;
@@ -792,34 +790,25 @@ span.cc {
   --pra32-color: rgb(255,140,0);
   --pra32-color-dark: rgb(196,108,0);
 }
-/* On Steps and Act Steps in a row, each as wide as 2 parameters (Act Steps from the middle, the 3rd column, in 4 columns),
-   and one above the other in 2 or 1 column */
-.panel-steps {
-  grid-column: 1 / -1;
-  padding: 4px 0 0;
-  display: flex;
-  flex-wrap: wrap;
+/* The check boxes of the steps beside Seq On Steps, and beside Seq Act Steps on the next row
+   (below them in 1 column) */
+.panel-steps-row-start {
+  grid-column-start: 1;
 }
-.panel-steps > div {
-  width: calc(var(--param-width) * 2);
-  max-width: 100%;
-  padding-left: 1px;  /* as the names of the parameters */
+.panel-steps-ctrl {
+  padding: 1px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 2px 10px;
-  line-height: var(--button-height);
+  gap: 4px;
+  height: calc(13px + var(--thumb-size));  /* as a slider */
 }
-.panel-steps span {
-  min-width: 64px;
-}
-.panel-steps label {
+.panel-steps-ctrl label {
   display: inline-flex;
   align-items: center;
   gap: 3px;
 }
 /* The check boxes drawn here, with a white check on the orange (the browser would draw a black one on a light color) */
-.panel-steps input[type="checkbox"] {
+.panel-steps-ctrl input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
   width: 13px;
@@ -831,11 +820,11 @@ span.cc {
   display: inline-grid;
   place-content: center;
 }
-.panel-steps input[type="checkbox"]:checked {
+.panel-steps-ctrl input[type="checkbox"]:checked {
   background: var(--pra32-color);
   border-color: var(--pra32-color);
 }
-.panel-steps input[type="checkbox"]:checked::after {
+.panel-steps-ctrl input[type="checkbox"]:checked::after {
   content: "";
   width: 3px;
   height: 7px;
@@ -844,11 +833,11 @@ span.cc {
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
-.panel-steps input[type="checkbox"]:disabled {
+.panel-steps-ctrl input[type="checkbox"]:disabled {
   background: #c8c8c8;
   border-color: #c8c8c8;
 }
-.panel-steps input[type="checkbox"]:hover:not(:disabled) {
+.panel-steps-ctrl input[type="checkbox"]:hover:not(:disabled) {
   border-color: var(--pra32-color-dark);
 }
 /* The lines inside Panel & Step Sequencer lighter than the others (the line above its heading as the others),
@@ -3219,7 +3208,7 @@ function getStoredCCValueString(index, number) {
 
 <details class="section" id="midiDetails" open>
 <summary class="midi-bar"><span class="midi-bar-items"><span>MIDI</span>
-<span class="midi-buttons"><button type="button" onclick="sendCurrentParameters()">Send Current</button></span></span></summary>
+<span class="midi-buttons" onclick="event.preventDefault()"><button type="button" onclick="sendCurrentParameters()">Send Current</button></span></span></summary>
 <div class="section midi">
 <div class="midi-item"><span class="lbl-midi">MIDI Ch</span>
 <select id="selectMIDICh" size="1" onchange="onChangeMIDICh()">
@@ -3249,7 +3238,6 @@ function getStoredCCValueString(index, number) {
 <div class="midi-break"></div>
 <div class="midi-item"><span class="lbl-midi">MIDI Out</span>
 <select id="selectOutputPort" size="1" onchange="onChangeOutputPort(); savePortSelection('selectOutputPort', midiOutputs)"><option>(None)</option></select></div>
-<div class="midi-item midi-buttons"><button type="button" onclick="sendCurrentParameters()">Send Current</button></div>
 <div class="midi-break"></div>
 <div class="midi-note" id="divMIDINote" hidden></div>
 </div>
@@ -3838,7 +3826,6 @@ const PANEL_PARAM_GROUPS = [
    ["Seq", "Mode",       "[Fwd|Rvs|Bnc]",             52, 0,   v => ["Fwd", "Rvs", "Bnc"][(v * 4 + 128) >> 8],  "soft-markers-3"],
    ["Seq", "Num Steps",  "",                          51, 32,  v => String(Math.max((v - 2) >> 2, 0) + 1),      ""],
    ["Seq", "On Steps",   "",                          56, 127, v => panelHex2(v),                               ""],
-   null,  // Act Steps from the middle (the 3rd column), above its check boxes
    ["Seq", "Act Steps",  "",                          53, 127, v => panelHex2(v),                               ""]],
   // B-10 to B-17
   [0, 1, 2, 3, 4, 5, 6, 7].flatMap(i => [["Seq", "Pitch " + i, "", 16 + i, [4, 22, 37, 57, 72, 89, 107, 124][i], v => panelPitchName(v), ""],
@@ -4145,7 +4132,7 @@ function setupPanel() {
       }
       const [category, name, sup, cc, , , markers] = p;
       const param = document.createElement("div");
-      param.className = "param";
+      param.className = (cc === PANEL_ACT_STEPS_CC) ? "param panel-steps-row-start" : "param";
       param.innerHTML = `<div class="param-name"><b>${category}</b> ${name}${sup ? ` <span class="sup">${sup}</span>` : ""} <span class="cc">CC#${cc}</span></div>
         <div class="param-ctrl ${markers}"><input id="inputPanel${cc}" type="range" min="0" max="127" step="1" aria-label="${category} ${name}"><span id="spanPanel${cc}">-</span><span id="span2Panel${cc}">-</span></div>`;
       const input = param.querySelector("input");
@@ -4155,21 +4142,20 @@ function setupPanel() {
       });
       ["pointerdown", "keydown"].forEach(type => input.addEventListener(type, e => { if (!e.repeat) { panelSliderBefore = Object.assign({}, panelValues); } }));
       div.appendChild(param);
+      if (cc === PANEL_ON_STEPS_CC || cc === PANEL_ACT_STEPS_CC) {
+        // The check boxes of the steps 1-7 beside it (step 0 is always On and Active: shown checked, and not changed)
+        const prefix = (cc === PANEL_ON_STEPS_CC) ? "panelOn" : "panelAct";
+        const steps = document.createElement("div");
+        steps.className = "param";
+        steps.innerHTML = `<div class="param-name"></div><div class="panel-steps-ctrl" role="group" aria-label="${category} ${name}"><label><input type="checkbox" checked disabled>0</label>${
+          [1, 2, 3, 4, 5, 6, 7].map(i => `<label><input type="checkbox" id="${prefix}${i}">${i}</label>`).join("")}</div>`;
+        steps.querySelectorAll("input[id]").forEach(box => box.addEventListener("change", () => {
+          panelPushUndo();
+          panelOnChangeBits(cc, prefix);
+        }));
+        div.appendChild(steps);
+      }
     });
-    if (g === 1) {
-      // The check boxes of the steps 1-7 (On and Active), after Seq On Steps and Seq Act Steps
-      const steps = document.createElement("div");
-      steps.className = "panel-steps";
-      // Step 0 is always On and Active (shown checked, and not changed)
-      const row = (label, prefix, cc) => `<div><span>${label}</span><label><input type="checkbox" checked disabled>0</label>${
-        [1, 2, 3, 4, 5, 6, 7].map(i => `<label><input type="checkbox" id="${prefix}${i}">${i}</label>`).join("")}</div>`;
-      steps.innerHTML = row("On Steps", "panelOn", PANEL_ON_STEPS_CC) + row("Act Steps", "panelAct", PANEL_ACT_STEPS_CC);
-      steps.querySelectorAll("input[id]").forEach(box => box.addEventListener("change", () => {
-        panelPushUndo();
-        panelOnChangeBits(box.id.startsWith("panelOn") ? PANEL_ON_STEPS_CC : PANEL_ACT_STEPS_CC, box.id.startsWith("panelOn") ? "panelOn" : "panelAct");
-      }));
-      div.appendChild(steps);
-    }
     container.appendChild(div);
   });
 
