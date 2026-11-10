@@ -1389,12 +1389,14 @@ function setupUndoKeys() {
         ((target.tagName == "INPUT") && (target.type != "range") && (target.type != "button"))) {
       return;
     }
+    // With the focus in Panel & Step Sequencer (e.g. on its slider): those of the panel parameters
+    var panel = target.closest && target.closest("#panelDetails");
     if ((event.code == "KeyZ") && !event.shiftKey) {
       event.preventDefault();
-      undo();
+      if (panel) { panelUndo(); } else { undo(); }
     } else if ((event.code == "KeyY") || ((event.code == "KeyZ") && event.shiftKey)) {
       event.preventDefault();
-      redo();
+      if (panel) { panelRedo(); } else { redo(); }
     }
   });
 }
@@ -3658,9 +3660,15 @@ function getStoredCCValueString(index, number) {
 <button type="button" onclick="panelRandomizeSteps(16)">Seq Randomize Pitch</button>
 <button type="button" onclick="panelRandomizeSteps(24)">Seq Randomize Velo</button>
 <button type="button" onclick="panelInitValues()">Initialize</button>
-<button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Seq Randomize Pitch/Velo, Initialize, or a move of a slider or a check box)">Undo</button>
-<button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo">Redo</button></div></div>
+<button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Seq Randomize Pitch/Velo, Initialize, Recall, or a move of a slider or a check box) (Ctrl+Z, with the focus here)">Undo</button>
+<button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo (Ctrl+Y or Ctrl+Shift+Z, with the focus here)">Redo</button></div></div>
 <div class="misc-group lbl-green" style="color:green"><span>Write <span>(to Device)</span></span><div class="misc-buttons" id="divPanelOps"></div></div>
+</div>
+<div class="section misc">
+<div class="misc-group"><span>Recall (from Browser)</span><div class="misc-buttons" id="divPanelRecall"></div></div>
+</div>
+<div class="section misc">
+<div class="misc-group"><span>Store (to Browser)</span><div class="misc-buttons" id="divPanelStore"></div></div>
 </div>
 <div class="params panel-params" id="divPanelParams"></div>
 </details>
@@ -3724,7 +3732,7 @@ Off <input type="number" id="inputNoteOffVelocity" min="1" max="127" step="1"></
 // ---- Panel & Step Sequencer (Experimental): the panel parameters of PRA32-U2/P (and PRA32-U2/M/P), and of PRA32-U2/M/P Web,
 // by the Control Changes on the Panel Channel (the Basic Channel + 10; see "Panel Channel" in README-PRA32-U2-P.md).
 // The editor keeps the values (in the browser), and sends them (nothing comes back);
-// the panel parameters have an Undo of their own (not Ctrl+Z, which is that of the synth parameters) ----
+// the panel parameters have an Undo of their own (Ctrl+Z with the focus in this section) ----
 "use strict";
 
 const PANEL_SCALES = ["Maj", "Min", "Mel", "MaP", "MiP", "Chr"];
@@ -3957,8 +3965,76 @@ function panelUpdateTargetOptions() {
   select.selectedIndex = panelSettings.target;
 }
 
+// The panel parameters kept in the browser (#0-7, with names), as the User Presets of the synth parameters:
+// Recall sets them in the editor and sends them; Store keeps the current ones
+const PANEL_MEMORY_MAX = 7;
+
+function panelMemoryKey(number) { return "keyPanelMemory" + number; }
+
+function panelGetMemory(number) {
+  try {
+    const data = JSON.parse(localStorage.getItem(panelMemoryKey(number)));
+    if (data && data.values) { return data; }
+  } catch (e) {}
+  return null;
+}
+
+function panelUpdateMemoryButtons() {
+  for (let number = 0; number <= PANEL_MEMORY_MAX; number++) {
+    const data = panelGetMemory(number);
+    const text = "#" + number + " " + ((data && data.name) ? data.name : "---");
+    ["buttonPanelRecall", "buttonPanelStore"].forEach(id => {
+      const button = document.getElementById(id + number);
+      button.textContent = text;
+      button.style.color = data ? "" : "#a0a0a0";
+    });
+  }
+}
+
+function panelRecall(number) {
+  const data = panelGetMemory(number);
+  if (!data) { return; }
+  panelPushUndo();
+  const values = panelDefaultValues();
+  for (const cc in data.values) {
+    if (cc in values) { values[cc] = panelClamp(parseInt(data.values[cc]) || 0, 0, 127); }
+  }
+  panelSetValues(values);
+}
+
+function panelStore(number) {
+  const data = panelGetMemory(number);
+  let name = data ? (data.name || "") : "";
+  let message = "";
+  while (true) {
+    name = prompt(message + "Store the current panel parameters to #" + number + " (in the browser)?\n" +
+                  "Name (up to " + USER_PRESET_NAME_LENGTH_MAX + " ASCII letters, digits, and symbols):", name);
+    if (name == null) { return; }
+    const normalized = normalizeUserPresetName(name);
+    if (normalized == name.trim()) { break; }
+    name = normalized;
+    message = "Only up to " + USER_PRESET_NAME_LENGTH_MAX + " ASCII letters, digits, and symbols can be used.\n";
+  }
+  try {
+    localStorage.setItem(panelMemoryKey(number), JSON.stringify({ name: normalizeUserPresetName(name), values: panelValues }));
+  } catch (e) {}
+  panelUpdateMemoryButtons();
+}
+
 function setupPanel() {
   panelLoad();
+
+  ["Recall", "Store"].forEach(kind => {
+    const div = document.getElementById("divPanel" + kind);
+    for (let number = 0; number <= PANEL_MEMORY_MAX; number++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.id = "buttonPanel" + kind + number;
+      b.addEventListener("click", () => (kind === "Recall") ? panelRecall(number) : panelStore(number));
+      div.appendChild(b);
+    }
+  });
+  panelUpdateMemoryButtons();
 
   // Shown or hidden as at the last time (hidden by default), as Store & File
   const details = document.getElementById("panelDetails");
