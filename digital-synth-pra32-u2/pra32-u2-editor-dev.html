@@ -787,6 +787,11 @@ span.cc {
   font-weight: bold;
 }
 /* ---- Panel & Step Sequencer (Experimental) ---- */
+/* A little more yellow than the orange of PRA32-U2, so that this section (of the panel, not of the synth) is told apart */
+#panelDetails {
+  --pra32-color: rgb(255,140,0);
+  --pra32-color-dark: rgb(196,108,0);
+}
 /* On Steps and Act Steps in a row, each as wide as 2 parameters (Act Steps from the middle, the 3rd column, in 4 columns),
    and one above the other in 2 or 1 column */
 .panel-steps {
@@ -823,6 +828,13 @@ span.cc {
 }
 /* The groups (and their buttons) as wide as their contents, so that Actions and Write (to Device) are in a row in every
    Web browser (a group of the buttons that grows, as in Actions above, may take a whole row in some of them, e.g. Safari) */
+/* The labels as wide as "Recall (from Browser)", so that the buttons of the rows start at the same column */
+#panelDetails .misc-group > span:first-child {
+  min-width: 132px;
+}
+#panelDetails .misc-group.lbl-green > span:first-child {
+  min-width: 0;  /* Write (to Device), next to Actions */
+}
 #panelDetails .misc-buttons {
   flex: 0 1 auto;
 }
@@ -3768,6 +3780,7 @@ const PANEL_PARAM_GROUPS = [
    ["Seq", "Mode",       "[Fwd|Rvs|Bnc]",             52, 0,   v => ["Fwd", "Rvs", "Bnc"][(v * 4 + 128) >> 8],  "soft-markers-3"],
    ["Seq", "Num Steps",  "",                          51, 32,  v => String(Math.max((v - 2) >> 2, 0) + 1),      ""],
    ["Seq", "On Steps",   "",                          56, 127, v => panelHex2(v),                               ""],
+   null,  // Act Steps from the middle (the 3rd column), above its check boxes
    ["Seq", "Act Steps",  "",                          53, 127, v => panelHex2(v),                               ""]],
   // B-10 to B-17
   [0, 1, 2, 3, 4, 5, 6, 7].flatMap(i => [["Seq", "Pitch " + i, "", 16 + i, [4, 22, 37, 57, 72, 89, 107, 124][i], v => panelPitchName(v), ""],
