@@ -814,6 +814,11 @@ span.cc {
 .params-details > .params.panel-params {
   border-top: 1px solid #c0c0c0;
 }
+/* A line above Seq Steps (below the parameters), as above them */
+#divPanelSeqSteps {
+  border-top: 1px solid #c0c0c0;
+  padding-top: 6px;
+}
 #spanPanelTarget {
   margin-left: 12px;  /* apart from Panel Ch (16px with the gap), as the items of MIDI */
 }
@@ -3603,7 +3608,7 @@ function getStoredCCValueString(index, number) {
 <div class="misc-group lbl-green" style="color:green"><span>Write <span>(to Device)</span></span><div class="misc-buttons" id="divPanelOps"></div></div>
 </div>
 <div class="params panel-params" id="divPanelParams"></div>
-<div class="section misc" style="margin-top: 6px">
+<div class="section misc" id="divPanelSeqSteps">
 <div class="misc-group"><span>Seq Steps</span><div class="misc-buttons">
 <button type="button" onclick="panelRandomizeSteps(16)" title="Randomize Seq Pitch 0-7 (and send them)">Randomize Pitch</button>
 <button type="button" onclick="panelRandomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them)">Randomize Velo</button></div></div>
