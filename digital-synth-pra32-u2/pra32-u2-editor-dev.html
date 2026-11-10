@@ -787,14 +787,6 @@ span.cc {
   font-weight: bold;
 }
 /* ---- Panel & Step Sequencer (Experimental) ---- */
-.param-group.panel-two-cols {
-  grid-template-columns: repeat(2, var(--param-width));
-}
-@container (max-width: 459px) {
-  .param-group.panel-two-cols {
-    grid-template-columns: var(--param-width);
-  }
-}
 .panel-steps {
   grid-column: 1 / -1;
   padding: 4px 1px 0;
@@ -3671,7 +3663,7 @@ Off <input type="number" id="inputNoteOffVelocity" min="1" max="127" step="1"></
 <script>
 // ---- Panel & Step Sequencer (Experimental): the panel parameters of PRA32-U2/P (and PRA32-U2/M/P), and of PRA32-U2/M Web,
 // by the Control Changes on the Panel Channel (the Basic Channel + 10; see "Panel Channel" in README-PRA32-U2-P.md).
-// As "pra32-u2-panel-editor.html": the editor keeps the values (in the browser), and sends them (nothing comes back);
+// The editor keeps the values (in the browser), and sends them (nothing comes back);
 // the panel parameters have an Undo of their own (not Ctrl+Z, which is that of the synth parameters) ----
 "use strict";
 
@@ -3910,11 +3902,11 @@ function setupPanel() {
   ch.selectedIndex = panelSettings.panelCh;
   panelUpdateTargetOptions();
 
-  // The parameters, as those of PRA32-U2 Editor (the steps in 2 columns: Seq Pitch N and Seq Velo N in a row)
+  // The parameters, as those of PRA32-U2 Editor (the steps as Seq Pitch N and Seq Velo N side by side)
   const container = document.getElementById("divPanelParams");
   PANEL_PARAM_GROUPS.forEach((group, g) => {
     const div = document.createElement("div");
-    div.className = "param-group" + ((g === 2) ? " panel-two-cols" : "");
+    div.className = "param-group";
     group.forEach(([category, name, sup, cc, , , markers]) => {
       const param = document.createElement("div");
       param.className = "param";
