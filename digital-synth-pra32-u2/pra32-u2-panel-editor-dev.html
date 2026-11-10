@@ -127,6 +127,8 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 <div class="row">
   <span class="group-label">Actions</span>
   <button onclick="initValues()" title="Set the parameters to the initial values (and send them)">Initial</button>
+  <button onclick="randomizeSteps(16)" title="Randomize Seq Pitch 0-7 in the editor (and send them), as Seq Rand Pitch of PRA32-U2/P">Randomize Pitch</button>
+  <button onclick="randomizeSteps(24)" title="Randomize Seq Velo 0-7 in the editor (and send them), as Seq Rand Velo of PRA32-U2/P">Randomize Velo</button>
 </div>
 <div class="row">
   <span class="group-label">File</span>
@@ -136,10 +138,6 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 </div>
 </details>
 
-<details open>
-<summary>Operations (to Device)</summary>
-<div class="row ops" id="divOps"></div>
-</details>
 
 <details open>
 <summary>Play</summary>
@@ -166,6 +164,11 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 </details>
 
 
+
+<details open>
+<summary>Operations (to Device)</summary>
+<div class="row ops" id="divOps"></div>
+</details>
 
 <script>
 "use strict";
@@ -210,8 +213,6 @@ const OPERATIONS = [
   [104, "Write Panel Prms", "Write the Panel Parameters of PRA32-U2 to its flash", true],
   [105, "Undo Read",        "Bring back what the last Read replaced (on PRA32-U2)"],
   [106, "Undo Write",       "Bring back what the last Write replaced in the flash (on PRA32-U2)", true],
-  [107, "Seq Rand Pitch",   "Randomize Seq Pitch 0-7 (on PRA32-U2)"],
-  [108, "Seq Rand Velo",    "Randomize Seq Velo 0-7 (on PRA32-U2)"],
   [109, "Panic",            "All Sound Off and Reset All Controllers (the synth selected)"],
 ];
 
@@ -405,6 +406,17 @@ function initValues() {
   updateDisplay();
   save();
   sendCurrent();
+}
+
+// Randomizes Seq Pitch 0-7 (16) or Seq Velo 0-7 (24) in the editor, and sends them, so that the editor
+// shows the values (Seq Rand Pitch and Seq Rand Velo of PRA32-U2/P do it on PRA32-U2, not shown here)
+function randomizeSteps(firstCC) {
+  for (let i = 0; i < 8; i++) {
+    values[firstCC + i] = Math.floor(Math.random() * 128);
+    sendCC(firstCC + i, values[firstCC + i]);
+  }
+  updateDisplay();
+  save();
 }
 
 function saveFile() {
