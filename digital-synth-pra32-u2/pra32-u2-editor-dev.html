@@ -822,9 +822,15 @@ span.cc {
   accent-color: var(--pra32-color);
   margin: 0;
 }
-/* A line above the parameters (below the buttons), as between the groups of the parameters */
-.params-details > .params.panel-params {
-  border-top: 1px solid #c0c0c0;
+/* The 3 parts of Panel & Step Sequencer, each shown or hidden (shown by default), inside it */
+#panelDetails > details.panel-sub {
+  margin-left: 0;
+}
+#panelCtrlDetails {
+  margin-top: 6px;
+}
+#panelCtrlDetails > .section:last-child {
+  margin-bottom: 0;
 }
 /* The groups (and their buttons) as wide as their contents, so that Actions and Write (to Device) are in a row in every
    Web browser (a group of the buttons that grows, as in Actions above, may take a whole row in some of them, e.g. Safari) */
@@ -3660,7 +3666,9 @@ function getStoredCCValueString(index, number) {
 
 <details class="section params-details" id="panelDetails">
 <summary>Panel &amp; Step Sequencer (Experimental) <span class="cc">for PRA32-U2/P and PRA32-U2/M/P</span></summary>
-<div class="section misc" style="margin-top: 6px">
+<details class="section panel-sub" id="panelCtrlDetails" open>
+<summary>Panel Ch, Actions, Store &amp; File</summary>
+<div class="section misc">
 <div class="misc-group"><span>Panel Ch</span><div class="misc-buttons">
 <select id="selectPanelCh" onchange="onChangePanelCh()"></select>
 <span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
@@ -3684,7 +3692,15 @@ function getStoredCCValueString(index, number) {
 <button type="button" onclick="panelExport()">Export</button>
 <span id="divPanelOps" style="display:contents"></span></div></div>
 </div>
-<div class="params panel-params" id="divPanelParams"></div>
+</details>
+<details class="section params-details panel-sub" id="panelParamsDetails" open>
+<summary>Panel Parameters</summary>
+<div class="params panel-params" id="divPanelParamsPanel"></div>
+</details>
+<details class="section params-details panel-sub" id="panelSeqDetails" open>
+<summary>Step Sequencer Parameters</summary>
+<div class="params panel-params" id="divPanelParamsSeq"></div>
+</details>
 </details>
 
 <details class="section" id="kbdDetails" open>
@@ -4045,6 +4061,15 @@ function setupPanel() {
 
   panelUpdateMemoryButtons();
 
+  // The 3 parts: shown or hidden as at the last time (shown by default)
+  [["panelCtrlDetails", "keyPanelCtrlOpen"], ["panelParamsDetails", "keyPanelParamsOpen"], ["panelSeqDetails", "keyPanelSeqOpen"]].forEach(([id, key]) => {
+    const sub = document.getElementById(id);
+    try { sub.open = (localStorage.getItem(key) !== "0"); } catch (e) {}
+    sub.addEventListener("toggle", () => {
+      try { localStorage.setItem(key, sub.open ? "1" : "0"); } catch (e) {}
+    });
+  });
+
   // Shown or hidden as at the last time (hidden by default), as Store & File
   const details = document.getElementById("panelDetails");
   try { details.open = (localStorage.getItem("keyPanelOpen") === "1"); } catch (e) {}
@@ -4059,8 +4084,8 @@ function setupPanel() {
   panelUpdateTargetOptions();
 
   // The parameters, as those of PRA32-U2 Editor (the steps as Seq Pitch N and Seq Velo N side by side)
-  const container = document.getElementById("divPanelParams");
   PANEL_PARAM_GROUPS.forEach((group, g) => {
+    const container = document.getElementById((g === 0) ? "divPanelParamsPanel" : "divPanelParamsSeq");
     const div = document.createElement("div");
     div.className = "param-group";
     group.forEach(p => {
