@@ -28,6 +28,7 @@ details { margin: 4px 0 10px; }
 summary { cursor: pointer; font-size: 13px; margin-bottom: 6px; }
 .note { color: #666; margin: 4px 0; }
 .warn { color: var(--pra32-color-dark); }
+.group-label { min-width: 48px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 4px 0; }
 button, select, input { font: inherit; }
 button {
@@ -109,23 +110,38 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 <details open>
 <summary>MIDI</summary>
 <div class="row">
-  <label>MIDI Out <select id="selectOutput" onchange="onChangeOutput()"><option>(None)</option></select></label>
-  <label>Basic Ch <select id="selectBasicCh" onchange="onChangeBasicCh()"></select></label>
-  <span>Panel Ch: <b id="spanPanelCh">11</b> (Basic Ch + 10)</span>
+  <label>MIDI Ch <select id="selectBasicCh" onchange="onChangeBasicCh()" title="The MIDI Channel (Basic Channel) of PRA32-U2"></select></label>
+  <span>Panel Ch <b id="spanPanelCh">11</b> (MIDI Ch + 10)</span>
   <label>Model <select id="selectModel" onchange="onChangeModel()">
     <option value="P">PRA32-U2/P</option>
     <option value="MP">PRA32-U2/M/P</option>
   </select></label>
+</div>
+<div class="row">
+  <label>MIDI Out <select id="selectOutput" onchange="onChangeOutput()"><option>(None)</option></select></label>
   <button onclick="sendCurrent()" title="Send the current parameters (all of them below) to the Panel Channel">Send Current</button>
 </div>
 <div id="divMIDIMessage" class="note warn"></div>
 </details>
 
 <details open>
+<summary>Actions &amp; File</summary>
+<div class="row">
+  <span class="group-label">Actions</span>
+  <button onclick="initValues()" title="Set the parameters to the initial values (and send them)">Initial</button>
+</div>
+<div class="row">
+  <span class="group-label">File</span>
+  <input type="file" id="inputFile" accept=".json,application/json" hidden onchange="loadFile(event)">
+  <button onclick="document.getElementById('inputFile').click()" title="Import the parameters from a file (and send them)">Import</button>
+  <button onclick="saveFile()" title="Export the parameters to a file">Export</button>
+</div>
+</details>
+
+<details open>
 <summary>Play</summary>
 <div class="row">
   <button id="buttonPlay" onclick="onClickPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button>
-  <span id="spanPlayHint" class="note"></span>
   <label id="labelSynth" hidden>Panel Synth <select id="selectSynth" onchange="onChangeSynth()"></select> <span class="cc">CC#58</span></label>
 </div>
 </details>
@@ -144,24 +160,13 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
   <tbody></tbody>
 </table>
 </div>
-<div class="note">Step 0 is always On and Active. Pitch 0 is Off.</div>
 </details>
 
 <details open>
-<summary>Operations (on PRA32-U2)</summary>
+<summary>Operations (to Device)</summary>
 <div class="row ops" id="divOps"></div>
 </details>
 
-<details>
-<summary>Editor Data</summary>
-<div class="row">
-  <button onclick="initValues()">Init (Defaults)</button>
-  <button onclick="saveFile()">Save to File</button>
-  <button onclick="document.getElementById('inputFile').click()">Load from File</button>
-  <input type="file" id="inputFile" accept=".json,application/json" hidden onchange="loadFile(event)">
-</div>
-<div class="note">The values are kept in the browser too. Init and Load change only the editor: send them by "Send Current".</div>
-</details>
 
 <script>
 "use strict";
@@ -363,9 +368,6 @@ function updateDisplay() {
     document.getElementById("act" + i).checked = (values[ACT_STEPS_CC] >> (i - 1)) & 1;
   }
   const seqMode = values[42] >= 64;
-  document.getElementById("spanPlayHint").textContent = seqMode
-    ? "Seq Mode: starts and stops the sequencer" + (values[49] >= 64 ? " (Seq Clock Src is Ext: MIDI Start/Stop also does)" : "")
-    : "Normal Mode: holds the note (Panel Play Pitch)";
   const play = document.getElementById("buttonPlay");
   play.classList.toggle("on", playing);
   play.textContent = playing ? (seqMode ? "Stop" : "Release") : "Play";
@@ -400,10 +402,11 @@ function sendCurrent() {
 }
 
 function initValues() {
-  if (!confirm("Set the values of the editor to the defaults? (Send them by \"Send Current\")")) { return; }
+  if (!confirm("Set the parameters to the initial values?")) { return; }
   values = defaultValues();
   updateDisplay();
   save();
+  sendCurrent();
 }
 
 function saveFile() {
@@ -428,7 +431,8 @@ function loadFile(event) {
     }
     updateDisplay();
     save();
-  }).catch(e => alert("Could not load the file: " + e.message));
+    sendCurrent();
+  }).catch(e => alert("Could not import the file: " + e.message));
   event.target.value = "";
 }
 
