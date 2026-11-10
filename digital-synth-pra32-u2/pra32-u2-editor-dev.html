@@ -225,7 +225,7 @@ input[type="range"]:not(.ready)::-moz-range-thumb {
   max-width: 100%;
 }
 /* Send Current on the heading of MIDI, shown with MIDI hidden too (as Send Panel and Play on the heading of
-   Panel CC Ch & Operations), so that it is always at hand */
+   Panel & Operations), so that it is always at hand */
 .midi-buttons button {
   height: var(--button-height);
   padding: 1px 5px;
@@ -239,7 +239,7 @@ input[type="range"]:not(.ready)::-moz-range-thumb {
 .midi-bar .midi-buttons {
   display: inline-flex;
   gap: 4px;
-  margin-left: 16px;  /* apart from MIDI (24px with the gap), as Send Panel from Panel CC Ch & Operations */
+  margin-left: 16px;  /* apart from MIDI (24px with the gap), as Send Panel from Panel & Operations */
 }
 .midi-item select {
   min-width: 0;
@@ -854,7 +854,7 @@ span.cc {
   border-top: 1px solid #e0e0e0;  /* a line above it, as above Panel Parameters and Step Sequencer Parameters */
   padding-top: 6px;
 }
-/* Send Panel and Play in the heading, so that they are shown with Panel CC Ch & Operations hidden too */
+/* Send Panel and Play in the heading, so that they are shown with Panel & Operations hidden too */
 .panel-summary-buttons {
   margin-left: 24px;
   font-weight: normal;
@@ -870,8 +870,12 @@ span.cc {
 #panelDetails .misc-buttons {
   flex: 0 1 auto;
 }
+/* The Panel CC Ch (the Basic Ch + 10) after the Basic Ch, as the CC numbers after the names */
+#spanPanelCCCh {
+  align-self: center;
+}
 #spanPanelTarget {
-  margin-left: 12px;  /* apart from Panel CC Ch (16px with the gap), as the items of MIDI */
+  margin-left: 12px;  /* apart from the Basic Ch (16px with the gap), as the items of MIDI */
 }
 #spanPanelTarget select {
   max-width: 100%;
@@ -1293,9 +1297,6 @@ window.onload = function() {
   }
   document.getElementById("selectMIDICh").selectedIndex = midi_ch;
 
-  if (window.PRA32U2WebSynth) {
-    onMIDISuccess({ inputs: new Map(), outputs: new Map() });  // PRA32-U2 Web is available without MIDI access
-  }
   if (navigator.requestMIDIAccess) {
     navigator.requestMIDIAccess({sysex: false}).then(onMIDISuccess, onMIDIFailure);
   } else {
@@ -1311,6 +1312,11 @@ window.onload = function() {
     }
   });
   updateUndoButton();
+  // PRA32-U2 Web is available without MIDI access: after the parameters restored, so that nothing is sent to it
+  // (as to PRA32-U2, whose output is available later); "Send Current" sends them
+  if (window.PRA32U2WebSynth) {
+    onMIDISuccess({ inputs: new Map(), outputs: new Map() });
+  }
 
   for (var number = 0; number <= USER_PROGRAM_NUMBER_MAX; number++) {
     updateRecallButton(number);
@@ -3699,11 +3705,11 @@ function getStoredCCValueString(index, number) {
 <details class="section params-details" id="panelDetails">
 <summary>Panel &amp; Step Sequencer (Experimental) <span class="cc">for PRA32-U2/P and PRA32-U2/M/P</span></summary>
 <details class="section panel-sub" id="panelCtrlDetails" open>
-<summary>Panel CC Ch &amp; Operations <span class="panel-summary-buttons" onclick="event.preventDefault()"><button type="button" onclick="sendPanelCurrent()">Send Panel</button>
+<summary>Panel &amp; Operations <span class="panel-summary-buttons" onclick="event.preventDefault()"><button type="button" onclick="sendPanelCurrent()">Send Panel</button>
 <button type="button" id="buttonPanelPlay" onclick="onClickPanelPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button></span></summary>
 <div class="section misc">
-<div class="misc-group"><span>Panel CC Ch</span><div class="misc-buttons">
-<select id="selectPanelCh" onchange="onChangePanelCh()"></select>
+<div class="misc-group"><span>Basic Ch</span><div class="misc-buttons">
+<select id="selectPanelCh" onchange="onChangePanelCh()" aria-label="Basic Ch"></select><span class="cc" id="spanPanelCCCh"></span>
 <span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
 </div></div>
 </div>
@@ -4002,8 +4008,10 @@ function panelRandomizeSteps(firstCC) {
   panelSave();
 }
 
+// The Basic Channel of PRA32-U2 chosen (not MIDI Ch, the channel of the synth to edit), and the Panel CC Ch is
+// the Basic Channel + 10, as in PRA32-U2 (kept as panelCh, the Panel CC Ch, as before)
 function onChangePanelCh() {
-  panelSettings.panelCh = document.getElementById("selectPanelCh").selectedIndex;
+  panelSettings.panelCh = (document.getElementById("selectPanelCh").selectedIndex + 10) & 0x0F;
   panelUpdateTargetOptions();
   panelSave();
 }
@@ -4018,6 +4026,7 @@ function onChangePanelTarget() {
 function panelUpdateTargetOptions() {
   const select = document.getElementById("selectPanelTarget");
   const basicCh = (panelSettings.panelCh + 6) & 0x0F;
+  document.getElementById("spanPanelCCCh").textContent = `Panel CC Ch ${panelSettings.panelCh + 1}`;
   select.innerHTML = "";
   PANEL_TARGETS.forEach(([name, offset]) => {
     const o = document.createElement("option");
@@ -4111,7 +4120,7 @@ function setupPanel() {
 
   const ch = document.getElementById("selectPanelCh");
   for (let i = 1; i <= 16; i++) { const o = document.createElement("option"); o.textContent = i; ch.appendChild(o); }
-  ch.selectedIndex = panelSettings.panelCh;
+  ch.selectedIndex = (panelSettings.panelCh + 6) & 0x0F;  // the Basic Channel
   panelUpdateTargetOptions();
 
   // The parameters, as those of PRA32-U2 Editor (the steps as Seq Pitch N and Seq Velo N side by side)
