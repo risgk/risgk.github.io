@@ -814,13 +814,6 @@ span.cc {
 .params-details > .params.panel-params {
   border-top: 1px solid #c0c0c0;
 }
-/* Seq Steps (Randomize Pitch and Velo) above Seq Pitch 0, as Page B-09 of the panel before B-10, with a line below it
-   (and the line of the parameters above it) */
-#divPanelSeqSteps {
-  padding: 6px 0;
-  margin-bottom: 0;
-  border-bottom: 1px solid #c0c0c0;
-}
 /* The groups (and their buttons) as wide as their contents, so that Actions and Write (to Device) are in a row in every
    Web browser (a group of the buttons that grows, as in Actions above, may take a whole row in some of them, e.g. Safari) */
 #panelDetails .misc-buttons {
@@ -3662,17 +3655,14 @@ function getStoredCCValueString(index, number) {
 </div>
 <div class="section misc">
 <div class="misc-group"><span>Actions</span><div class="misc-buttons">
+<button type="button" onclick="panelRandomizeSteps(16)" title="Randomize Seq Pitch 0-7 (and send them), as Seq Rand Pitch of the panel">Seq Rand Pitch</button>
+<button type="button" onclick="panelRandomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them), as Seq Rand Velo of the panel">Seq Rand Velo</button>
 <button type="button" onclick="panelInitValues()" title="Set the panel parameters to the initial values (and send them)">Initialize</button>
-<button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Initialize, Randomize, or a move of a slider or a check box)">Undo</button>
+<button type="button" id="buttonPanelUndo" onclick="panelUndo()" title="Back to the panel parameters before the last change (Seq Rand Pitch/Velo, Initialize, or a move of a slider or a check box)">Undo</button>
 <button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo">Redo</button></div></div>
 <div class="misc-group lbl-green" style="color:green"><span>Write <span>(to Device)</span></span><div class="misc-buttons" id="divPanelOps"></div></div>
 </div>
 <div class="params panel-params" id="divPanelParams"></div>
-<div class="section misc" id="divPanelSeqSteps">
-<div class="misc-group"><span>Seq Steps</span><div class="misc-buttons">
-<button type="button" onclick="panelRandomizeSteps(16)" title="Randomize Seq Pitch 0-7 (and send them)">Randomize Pitch</button>
-<button type="button" onclick="panelRandomizeSteps(24)" title="Randomize Seq Velo 0-7 (and send them)">Randomize Velo</button></div></div>
-</div>
 </details>
 
 <details class="section" id="kbdDetails" open>
@@ -4022,9 +4012,6 @@ function setupPanel() {
         panelOnChangeBits(box.id.startsWith("panelOn") ? PANEL_ON_STEPS_CC : PANEL_ACT_STEPS_CC, box.id.startsWith("panelOn") ? "panelOn" : "panelAct");
       }));
       div.appendChild(steps);
-    }
-    if (g === 2) {
-      container.appendChild(document.getElementById("divPanelSeqSteps"));  // Before Seq Pitch 0, as on the panel
     }
     container.appendChild(div);
   });
