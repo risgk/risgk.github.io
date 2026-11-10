@@ -814,10 +814,12 @@ span.cc {
 .params-details > .params.panel-params {
   border-top: 1px solid #c0c0c0;
 }
-/* A line above Seq Steps (below the parameters), as above them */
+/* Seq Steps (Randomize Pitch and Velo) above Seq Pitch 0, as Page B-09 of the panel before B-10, with a line below it
+   (and the line of the parameters above it) */
 #divPanelSeqSteps {
-  border-top: 1px solid #c0c0c0;
-  padding-top: 6px;
+  padding: 6px 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid #c0c0c0;
 }
 /* The groups (and their buttons) as wide as their contents, so that Actions and Write (to Device) are in a row in every
    Web browser (a group of the buttons that grows, as in Actions above, may take a whole row in some of them, e.g. Safari) */
@@ -4020,6 +4022,9 @@ function setupPanel() {
         panelOnChangeBits(box.id.startsWith("panelOn") ? PANEL_ON_STEPS_CC : PANEL_ACT_STEPS_CC, box.id.startsWith("panelOn") ? "panelOn" : "panelAct");
       }));
       div.appendChild(steps);
+    }
+    if (g === 2) {
+      container.appendChild(document.getElementById("divPanelSeqSteps"));  // Before Seq Pitch 0, as on the panel
     }
     container.appendChild(div);
   });
