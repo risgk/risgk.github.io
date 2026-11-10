@@ -7,7 +7,7 @@
 <!-- PRA32-U2/P Panel Editor (Prototype): edits the Panel and Step Sequencer Parameters of PRA32-U2/P (and PRA32-U2/M/P)
      by the Control Changes on the Panel Channel (the Basic Channel + 4), e.g. for PRA32-U2/P without the panel
      (see "Panel Channel" in README-PRA32-U2-P.md). PRA32-U2 sends nothing back, so the editor keeps the values
-     (in the browser, and in a file), and sends them all by "Send All" -->
+     (in the browser, and in a file), and sends them all by "Send Current" -->
 <style>
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Yu Gothic UI", "Meiryo", sans-serif;
@@ -107,10 +107,10 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
     <option value="P">PRA32-U2/P</option>
     <option value="MP">PRA32-U2/M/P</option>
   </select></label>
-  <button onclick="sendAll()" title="Send all the parameters below to the Panel Channel">Send All</button>
+  <button onclick="sendCurrent()" title="Send the current parameters (all of them below) to the Panel Channel">Send Current</button>
 </div>
 <div id="divMIDIMessage" class="note warn"></div>
-<div class="note">PRA32-U2 sends nothing back: the editor keeps the values (in the browser), and "Send All" sends them all.
+<div class="note">PRA32-U2 sends nothing back: the editor keeps the values (in the browser), and "Send Current" sends them all.
   An operation on PRA32-U2 (e.g. Read Panel Prms, Seq Rand Pitch, or the panel) changes them there, not here.</div>
 </details>
 
@@ -154,7 +154,7 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
   <button onclick="document.getElementById('inputFile').click()">Load from File</button>
   <input type="file" id="inputFile" accept=".json,application/json" hidden onchange="loadFile(event)">
 </div>
-<div class="note">The values are kept in the browser too. Init and Load change only the editor: send them by "Send All".</div>
+<div class="note">The values are kept in the browser too. Init and Load change only the editor: send them by "Send Current".</div>
 </details>
 
 <script>
@@ -386,7 +386,7 @@ function makeOps() {
   });
 }
 
-function sendAll() {
+function sendCurrent() {
   if (settings.model === "MP") { sendCC(58, settings.synth); }
   // The Panel Parameters first (the Scale and the offsets that the pitches need), and then the others
   [40, 41, 42, 44, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57].forEach(cc => sendCC(cc, values[cc]));
@@ -394,7 +394,7 @@ function sendAll() {
 }
 
 function initValues() {
-  if (!confirm("Set the values of the editor to the defaults? (Send them by \"Send All\")")) { return; }
+  if (!confirm("Set the values of the editor to the defaults? (Send them by \"Send Current\")")) { return; }
   values = defaultValues();
   updateDisplay();
   save();
