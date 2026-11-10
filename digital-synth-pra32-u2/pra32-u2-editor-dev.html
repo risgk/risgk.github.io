@@ -2208,7 +2208,60 @@ function updateSliderFill(input) {
   input.classList.add("ready");
 }
 
+// The sliders of the switches of 2, 3, and 6 choices (e.g. [Off|On], [Fwd|Rvs|Bnc], and [Saw|Sqr|Tri|Sin|WT|Pls]):
+// the thumb dragged near a marker (within SLIDER_SNAP_DISTANCE) goes to it, as a datalist of Chrome did, so that
+// the values of the choices are easy to take. Not by the keys (a step a key), nor for the other markers (e.g. the
+// center of [-|+], and Filter Mode and Osc 1 Morph, which change smoothly between them)
+const SLIDER_SNAP_DISTANCE = 4;
+const SLIDER_SNAP_MARKERS = {
+  "soft-markers-2": [0, 127],
+  "soft-markers-3": [0, 64, 127],
+  "soft-markers-6": [0, 26, 51, 77, 102, 127],
+};
+var sliderSnapByPointer = false;
+
+function sliderSnapMarkers(input) {
+  var ctrl = input.parentElement;
+  if (!ctrl || !ctrl.classList) {
+    return null;
+  }
+  for (var name in SLIDER_SNAP_MARKERS) {
+    if (ctrl.classList.contains(name)) {
+      return SLIDER_SNAP_MARKERS[name];
+    }
+  }
+  return null;
+}
+
+function setupSliderSnap() {
+  document.addEventListener("pointerdown", function(event) {
+    sliderSnapByPointer = true;
+  }, true);
+  document.addEventListener("keydown", function(event) {
+    sliderSnapByPointer = false;
+  }, true);
+  // Before the other listeners of "input" (the fill, Undo, and the value), so that they take the value snapped
+  document.addEventListener("input", function(event) {
+    var input = event.target;
+    if (!sliderSnapByPointer || !input.matches || !input.matches("input[type=range]")) {
+      return;
+    }
+    var markers = sliderSnapMarkers(input);
+    if (!markers) {
+      return;
+    }
+    var value = parseInt(input.value);
+    for (var i = 0; i < markers.length; i++) {
+      if ((Math.abs(value - markers[i]) <= SLIDER_SNAP_DISTANCE) && (value != markers[i])) {
+        input.value = markers[i];
+        break;
+      }
+    }
+  }, true);
+}
+
 function setupSliderFill() {
+  setupSliderSnap();
   document.querySelectorAll("input[type=range]").forEach(updateSliderFill);
   document.addEventListener("input", function(event) {
     if (event.target.matches && event.target.matches("input[type=range]")) {
