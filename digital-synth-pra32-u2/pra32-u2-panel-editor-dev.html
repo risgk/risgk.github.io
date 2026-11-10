@@ -380,6 +380,7 @@ span.cc {
 <div class="misc-group"><span>Play</span><div class="misc-buttons">
 <button type="button" id="buttonPlay" onclick="onClickPlay()" title="Panel Play (CC#111): Normal Mode: holds the note; Seq Mode: starts and stops the sequencer">Play</button>
 <span id="spanSynth" hidden>Panel Synth<span class="cc">CC#58</span> <select id="selectSynth" onchange="onChangeSynth()"></select></span></div></div>
+</div>
 <div class="section misc">
 <div class="misc-group"><span>Actions</span><div class="misc-buttons">
 <button type="button" onclick="initValues()" title="Set the parameters to the initial values (and send them)">Initial</button>
@@ -393,7 +394,6 @@ span.cc {
 <input type="file" id="inputFile" accept=".json,application/json" hidden onchange="loadFile(event)">
 <button type="button" onclick="document.getElementById('inputFile').click()" title="Import the parameters from a file (and send them)">Import</button>
 <button type="button" onclick="saveFile()" title="Export the parameters to a file">Export</button></div></div>
-</div>
 </div>
 </details>
 
