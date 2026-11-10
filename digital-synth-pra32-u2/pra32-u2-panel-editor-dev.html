@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PRA32-U2/P Panel Editor</title>
+<title>PRA32-U2/P Panel Editor (Experimental)</title>
 <!-- PRA32-U2/P Panel Editor (Experimental): edits the Panel and Step Sequencer Parameters of PRA32-U2/P (and PRA32-U2/M/P)
      by the Control Changes on the Panel Channel (the Basic Channel + 10, enabled by PRA32_U2_USE_PANEL_CHANNEL), e.g. for PRA32-U2/P without the panel
      (see "Panel Channel" in README-PRA32-U2-P.md). PRA32-U2 sends nothing back, so the editor keeps the values
@@ -96,6 +96,8 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
 <body>
 <h1>PRA32-U2/P Panel Editor <span class="sub">(Experimental)</span></h1>
 <div class="rule"></div>
+<div class="note warn"><b>Experimental:</b> this editor and the Panel Channel of PRA32-U2/P may change (or be removed) in a later version.
+  The Panel Channel needs <code>#define PRA32_U2_USE_PANEL_CHANNEL</code> (disabled by default) in the sketch of PRA32-U2/P.</div>
 
 <details open>
 <summary>MIDI</summary>
@@ -110,7 +112,6 @@ table.steps tr.current td:first-child { color: var(--pra32-color); font-weight: 
   <button onclick="sendCurrent()" title="Send the current parameters (all of them below) to the Panel Channel">Send Current</button>
 </div>
 <div id="divMIDIMessage" class="note warn"></div>
-<div class="note">Experimental: the Panel Channel needs <code>#define PRA32_U2_USE_PANEL_CHANNEL</code> (disabled by default) in the sketch of PRA32-U2/P.</div>
 <div class="note">PRA32-U2 sends nothing back: the editor keeps the values (in the browser), and "Send Current" sends them all.
   An operation on PRA32-U2 (e.g. Read Panel Prms, Seq Rand Pitch, or the panel) changes them there, not here.</div>
 </details>
