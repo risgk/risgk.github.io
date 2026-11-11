@@ -1085,16 +1085,16 @@ var controlNumberToStringMap = new Map([
 
   [ A_D_KEY_TRK    , "A_D_KEY_TRK    " ],
   [ VOICE_ASGN_MODE, "VOICE_ASGN_MODE" ],
+  [ VOICE_GRP_MODE , "VOICE_GRP_MODE " ],
   [ LFO_TRIG_MODE  , "LFO_TRIG_MODE  " ],
-  [ STRETCH_TUNE   , "STRETCH_TUNE   " ],
 
   [ BTH_FILTER_AMT , "BTH_FILTER_AMT " ],
   [ BTH_AMP_MOD    , "BTH_AMP_MOD    " ],
   [ AFT_T_LFO_AMT  , "AFT_T_LFO_AMT  " ],
   [ PORTA_MODE     , "PORTA_MODE     " ],
   [ OSC_SAW_W_MODE , "OSC_SAW_W_MODE " ],
+  [ STRETCH_TUNE   , "STRETCH_TUNE   " ],
   [ PAN            , "PAN            " ],
-  [ VOICE_GRP_MODE , "VOICE_GRP_MODE " ],
 
   [ DISTORTION     , "DISTORTION     " ],
   [ FX_ROUTING     , "FX_ROUTING     " ],
@@ -1167,16 +1167,16 @@ var controllersInLocalStorage = [
 
   A_D_KEY_TRK    ,
   VOICE_ASGN_MODE,
+  VOICE_GRP_MODE ,
   LFO_TRIG_MODE  ,
-  STRETCH_TUNE   ,
 
   BTH_FILTER_AMT ,
   BTH_AMP_MOD    ,
   AFT_T_LFO_AMT  ,
   PORTA_MODE     ,
   OSC_SAW_W_MODE ,
+  STRETCH_TUNE   ,
   PAN            ,
-  VOICE_GRP_MODE ,
 
   DISTORTION     ,
   FX_ROUTING     ,
@@ -1251,16 +1251,16 @@ presetControllers[AMP_VEL_SENS   ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   
 
 presetControllers[A_D_KEY_TRK    ] = [64 , 64 , 64 , 64 , 64 , 64 , 64 , 64 ,   64 , 64 , 64 , 64 , 64 , 64 , 64 , 64 ];
 presetControllers[VOICE_ASGN_MODE] = [76 , 76 , 76 , 76 , 76 , 76 , 76 , 76 ,   76 , 76 , 76 , 76 , 76 , 76 , 76 , 76 ];
+presetControllers[VOICE_GRP_MODE ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ];
 presetControllers[LFO_TRIG_MODE  ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ];
-presetControllers[STRETCH_TUNE   ] = [72 , 72 , 72 , 72 , 72 , 72 , 72 , 72 ,   72 , 72 , 72 , 72 , 72 , 72 , 72 , 72 ];
 
 presetControllers[BTH_FILTER_AMT ] = [64 , 64 , 64 , 64 , 64 , 64 , 64 , 64 ,   64 , 64 , 64 , 64 , 64 , 64 , 64 , 64 ];
 presetControllers[BTH_AMP_MOD    ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ];
 presetControllers[AFT_T_LFO_AMT  ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ];
 presetControllers[PORTA_MODE     ] = [127, 127, 127, 127, 127, 127, 127, 127,   127, 127, 127, 127, 127, 127, 127, 127];
 presetControllers[OSC_SAW_W_MODE ] = [127, 127, 127, 127, 127, 127, 127, 127,   127, 127, 127, 127, 127, 127, 127, 127];
+presetControllers[STRETCH_TUNE   ] = [72 , 72 , 72 , 72 , 72 , 72 , 72 , 72 ,   72 , 72 , 72 , 72 , 72 , 72 , 72 , 72 ];
 presetControllers[PAN            ] = [64 , 64 , 64 , 64 , 64 , 64 , 64 , 64 ,   64 , 64 , 64 , 64 , 64 , 64 , 64 , 64 ];
-presetControllers[VOICE_GRP_MODE ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ];
 
 presetControllers[DISTORTION     ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ];
 presetControllers[FX_ROUTING     ] = [0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ,   0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  ];
@@ -3150,8 +3150,8 @@ function fileExport() {
   str += "\n";
   str += fileExportOneLine(A_D_KEY_TRK    );
   str += fileExportOneLine(VOICE_ASGN_MODE);
+  str += fileExportOneLine(VOICE_GRP_MODE );
   str += fileExportOneLine(LFO_TRIG_MODE  );
-  str += fileExportOneLine(STRETCH_TUNE   );
   str += "\n";
   str += "\n";
   str += fileExportOneLine(BTH_FILTER_AMT );
@@ -3159,8 +3159,8 @@ function fileExport() {
   str += fileExportOneLine(AFT_T_LFO_AMT  );
   str += fileExportOneLine(PORTA_MODE     );
   str += fileExportOneLine(OSC_SAW_W_MODE );
+  str += fileExportOneLine(STRETCH_TUNE   );
   str += fileExportOneLine(PAN            );
-  str += fileExportOneLine(VOICE_GRP_MODE );
   str += "\n";
   str += fileExportOneLine(DISTORTION     );
   str += fileExportOneLine(FX_ROUTING     );
@@ -3639,12 +3639,12 @@ function getStoredCCValueString(index, number) {
   <div class="param-ctrl soft-markers-6"><input  id="inputVOICE_ASGN_MODE"  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(VOICE_ASGN_MODE, value)"><span    id="spanVOICE_ASGN_MODE" >-</span><span   id="span2VOICE_ASGN_MODE" >-</span></div>
 </div>
 <div class="param">
-  <div class="param-name"><b>LFO</b> Trig Mode <span class="sup">[Aut|Off|On|VOn|VOf|VAu]</span> <span class="cc">CC#88</span></div>
-  <div class="param-ctrl soft-markers-6"><input  id="inputLFO_TRIG_MODE  "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(LFO_TRIG_MODE  , value)"><span    id="spanLFO_TRIG_MODE  " >-</span><span   id="span2LFO_TRIG_MODE  " >-</span></div>
+  <div class="param-name"><b>Voice</b> Group Mode <span class="sup">[Off|Ly2|RLy|RR2|RR3|RR4]</span> <span class="cc">CC#80</span></div>
+  <div class="param-ctrl soft-markers-6"><input  id="inputVOICE_GRP_MODE "  type="range" min="0" max="127" step="1" oninput="onChangeVoiceGroupMode(value)"><span    id="spanVOICE_GRP_MODE " >-</span><span   id="span2VOICE_GRP_MODE " >-</span></div>
 </div>
 <div class="param">
-  <div class="param-name">Stretch Tune <span class="sup">[-|+]</span> <span class="cc">CC#22</span></div>
-  <div class="param-ctrl soft-marker-c"><input  id="inputSTRETCH_TUNE   "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(STRETCH_TUNE   , value)"><span    id="spanSTRETCH_TUNE   " >-</span><span   id="span2STRETCH_TUNE   " >-</span></div>
+  <div class="param-name"><b>LFO</b> Trig Mode <span class="sup">[Aut|Off|On|VOn|VOf|VAu]</span> <span class="cc">CC#88</span></div>
+  <div class="param-ctrl soft-markers-6"><input  id="inputLFO_TRIG_MODE  "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(LFO_TRIG_MODE  , value)"><span    id="spanLFO_TRIG_MODE  " >-</span><span   id="span2LFO_TRIG_MODE  " >-</span></div>
 </div>
 </div>
 <div class="param-group">
@@ -3669,12 +3669,12 @@ function getStoredCCValueString(index, number) {
   <div class="param-ctrl soft-markers-2"><input  id="inputOSC_SAW_W_MODE "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(OSC_SAW_W_MODE , value)"><span    id="spanOSC_SAW_W_MODE " >-</span><span   id="span2OSC_SAW_W_MODE " >-</span></div>
 </div>
 <div class="param">
-  <div class="param-name">Pan <span class="cc">CC#10</span></div>
-  <div class="param-ctrl"><input  id="inputPAN            "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(PAN            , value)"><span    id="spanPAN            " >-</span><span   id="span2PAN            " >-</span></div>
+  <div class="param-name">Stretch Tune <span class="sup">[-|+]</span> <span class="cc">CC#22</span></div>
+  <div class="param-ctrl soft-marker-c"><input  id="inputSTRETCH_TUNE   "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(STRETCH_TUNE   , value)"><span    id="spanSTRETCH_TUNE   " >-</span><span   id="span2STRETCH_TUNE   " >-</span></div>
 </div>
 <div class="param">
-  <div class="param-name"><b>Voice</b> Group Mode <span class="sup">[Off|Ly2|RLy|RR2|RR3|RR4]</span> <span class="cc">CC#80</span></div>
-  <div class="param-ctrl soft-markers-6"><input  id="inputVOICE_GRP_MODE "  type="range" min="0" max="127" step="1" oninput="onChangeVoiceGroupMode(value)"><span    id="spanVOICE_GRP_MODE " >-</span><span   id="span2VOICE_GRP_MODE " >-</span></div>
+  <div class="param-name">Pan <span class="cc">CC#10</span></div>
+  <div class="param-ctrl"><input  id="inputPAN            "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(PAN            , value)"><span    id="spanPAN            " >-</span><span   id="span2PAN            " >-</span></div>
 </div>
 </div>
 </div>
