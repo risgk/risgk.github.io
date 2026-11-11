@@ -868,7 +868,7 @@ span.cc {
 #panelDetails .misc-buttons {
   flex: 0 1 auto;
 }
-/* The Panel CC Ch (the Basic Ch + 10) after the Basic Ch, as the CC numbers after the names */
+/* The Panel CC Ch (the Basic Ch + 14) after the Basic Ch, as the CC numbers after the names */
 #spanPanelCCCh {
   align-self: center;
 }
@@ -3808,16 +3808,18 @@ function panelSigned(v) { return (v > 0 ? "+" : "") + v; }
 function panelHex2(v) { return "x" + v.toString(16).toUpperCase().padStart(2, "0"); }
 
 // [category, name, supplement, CC#, default, display, markers (the class of PRA32-U2 Editor)], in groups (rows of 4)
+const PANEL_GROUP_MODES = ["Off", "RR4", "RR3", "RR2", "Ly2", "RLy"];
 const PANEL_PARAM_GROUPS = [
-  // In the order of the pages of the panel (B-00 to B-03), 2 a page (MIDI Basic Ch of B-00 and the empty one of B-03
-  // are empty cells here)
+  // In the order of the pages of the panel (B-00 to B-03), 2 a page (MIDI Basic Ch of B-00 is an empty cell here;
+  // MIDI Group Mode of B-03 is of PRA32-U2/M/P)
   [["Panel", "Play Mode",  "[Nrm|Seq]",                 42, 0,   v => ["Nrm", "Seq"][(v * 2 + 128) >> 8],       "soft-markers-2"],
    null,
    ["Panel", "Play Pitch", "",                          44, 0,   v => panelPitchName(v),                        ""],
    ["Panel", "Play Velo",  "",                          45, 100, v => String(v),                                ""],
    ["Panel", "Scale",      "[Maj|Min|Mel|MaP|MiP|Chr]", 40, 0,   v => PANEL_SCALES[(v * 10 + 128) >> 8],        "soft-markers-6"],
    ["Panel", "Pitch Ofst", "[-|+]",                     46, 64,  v => panelSigned(panelClamp(v - 64, -60, 60)), "soft-marker-c"],
-   ["Panel", "Transpose",  "[-|+]",                     41, 64,  v => panelSigned(v - 64),                      "soft-marker-c"]],
+   ["Panel", "Transpose",  "[-|+]",                     41, 64,  v => panelSigned(v - 64),                      "soft-marker-c"],
+   ["MIDI",  "Group Mode", "[Off|RR4|RR3|RR2|Ly2|RLy]", 14, 0,   v => PANEL_GROUP_MODES[(v * 10 + 128) >> 8],  "soft-markers-6"]],
   // B-04 to B-08
   [["Seq", "Step Note",  "[4|8|16]",                  55, 64,  v => ["4", "8", "16"][(v * 4 + 128) >> 8],       "soft-markers-3"],
    ["Seq", "Clock Src",  "[Int|Ext]",                 49, 0,   v => ["Int", "Ext"][(v * 2 + 128) >> 8],         "soft-markers-2"],
@@ -3843,14 +3845,12 @@ const PANEL_OPERATIONS = [
 // The channels that PRA32-U2/M/P (and PRA32-U2/M/P Web) selects (Panel Target Ch): [name, the Basic Channel + this]
 const PANEL_TARGETS = [
   ["Main Synth", 0], ["Sub Synth 1", 1], ["Sub Synth 2", 2], ["Sub Synth 3", 3],
-  ["Round Robin (2 notes: Main, Sub 1)", 6], ["Round Robin (2 notes: Sub 2, 3)", 7], ["Round Robin (2 notes x 2, layered)", 8],
-  ["Round Robin (3 notes: Sub 1-3)", 11], ["Round Robin (4 notes)", 12],
-  ["Layering (Main, Sub 1)", 13], ["Layering (Sub 2, 3)", 14], ["Layering (all 4)", 15],
+  ["Group (by MIDI Group Mode)", 4], ["Group 2 (by MIDI Group Mode)", 5], ["Layering (all 4)", 15],
 ];
 const PANEL_STORAGE_KEY = "keyPRA32U2EditorPanel";
 
 let panelValues = {};
-let panelSettings = { panelCh: 10, target: 0 };
+let panelSettings = { basicCh: 0, target: 0 };  // the Basic Ch - 1 (the Panel CC Ch is it + 14)
 let panelPlaying = false;
 let panelUndoStack = [];
 let panelRedoStack = [];
@@ -3883,9 +3883,14 @@ function panelDefaultValues() {
   return v;
 }
 
+// The Panel CC Ch (0-15): the Basic Ch + 14, as in PRA32-U2
+function panelCCCh() {
+  return (panelSettings.basicCh + 14) & 0x0F;
+}
+
 function panelSendCC(number, value) {
   if (midiOutput) {
-    midiOutput.send([CONTROL_CHANGE | panelSettings.panelCh, number, value]);
+    midiOutput.send([CONTROL_CHANGE | panelCCCh(), number, value]);
   }
 }
 
@@ -3901,7 +3906,12 @@ function panelLoad() {
       for (const cc in data.values || {}) {
         if (cc in panelValues) { panelValues[cc] = panelClamp(parseInt(data.values[cc]) || 0, 0, 127); }
       }
-      Object.assign(panelSettings, data.settings || {});
+      const settings = data.settings || {};
+      if ((settings.basicCh === undefined) && (settings.panelCh !== undefined)) {  // kept as the Panel CC Ch (+ 10) before
+        settings.basicCh = (settings.panelCh + 6) & 0x0F;
+      }
+      panelSettings.basicCh = panelClamp(parseInt(settings.basicCh) || 0, 0, 15);
+      panelSettings.target = panelClamp(parseInt(settings.target) || 0, 0, PANEL_TARGETS.length - 1);
     }
   } catch (e) {}
 }
@@ -3984,7 +3994,7 @@ function onClickPanelPlay() {
 function sendPanelCurrent() {
   panelSendCC(58, PANEL_TARGETS[panelSettings.target][1]);
   // The Panel Parameters first (the Scale and the offsets that the pitches need), and then the others
-  [40, 41, 42, 44, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57].forEach(cc => panelSendCC(cc, panelValues[cc]));
+  [40, 41, 42, 44, 45, 46, 14, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57].forEach(cc => panelSendCC(cc, panelValues[cc]));
   for (let i = 0; i < 8; i++) { panelSendCC(16 + i, panelValues[16 + i]); panelSendCC(24 + i, panelValues[24 + i]); }
 }
 
@@ -4008,9 +4018,9 @@ function panelRandomizeSteps(firstCC) {
 }
 
 // The Basic Channel of PRA32-U2 chosen (not MIDI Ch, the channel of the synth to edit), and the Panel CC Ch is
-// the Basic Channel + 10, as in PRA32-U2 (kept as panelCh, the Panel CC Ch, as before)
+// the Basic Channel + 14, as in PRA32-U2
 function onChangePanelCh() {
-  panelSettings.panelCh = (document.getElementById("selectPanelCh").selectedIndex + 10) & 0x0F;
+  panelSettings.basicCh = document.getElementById("selectPanelCh").selectedIndex;
   panelUpdateTargetOptions();
   panelSave();
 }
@@ -4024,8 +4034,8 @@ function onChangePanelTarget() {
 // The channels of Panel Target Ch, by the Basic Channel (the Panel Channel - 10)
 function panelUpdateTargetOptions() {
   const select = document.getElementById("selectPanelTarget");
-  const basicCh = (panelSettings.panelCh + 6) & 0x0F;
-  document.getElementById("spanPanelCCCh").textContent = `Panel CC Ch ${panelSettings.panelCh + 1}`;
+  const basicCh = panelSettings.basicCh;
+  document.getElementById("spanPanelCCCh").textContent = `Panel CC Ch ${panelCCCh() + 1}`;
   select.innerHTML = "";
   PANEL_TARGETS.forEach(([name, offset]) => {
     const o = document.createElement("option");
@@ -4071,7 +4081,7 @@ function panelStore() {
 // Set Basic Ch: the Basic Channel of PRA32-U2 changed by MIDI Basic Ch (#47) and Set Basic Ch (#109) on the Panel CC Ch now,
 // and then the Basic Ch of the editor (so that the Panel CC Ch follows it); kept in the flash by Write (to Device)
 function panelBasicCh() {
-  return ((panelSettings.panelCh + 6) & 0x0F) + 1;
+  return panelSettings.basicCh + 1;
 }
 
 function panelSetBasicCh(basicCh) {
@@ -4084,7 +4094,7 @@ function panelSetBasicCh(basicCh) {
 
 function panelConfirmSetBasicCh(basicCh) {
   return confirm(`Set the Basic Channel of PRA32-U2 from ${panelBasicCh()} to ${basicCh}?\n` +
-    `The Panel CC Ch moves to ${((basicCh + 9) & 0x0F) + 1} (and the synths of PRA32-U2/M from ${basicCh}: set MIDI Ch too).\n` +
+    `The Panel CC Ch moves to ${((basicCh + 13) & 0x0F) + 1} (and the synths of PRA32-U2/M from ${basicCh}: set MIDI Ch too).\n` +
     "Write (to Device) keeps it in the flash.");
 }
 
@@ -4154,7 +4164,7 @@ function setupPanel() {
 
   const ch = document.getElementById("selectPanelCh");
   for (let i = 1; i <= 16; i++) { const o = document.createElement("option"); o.textContent = i; ch.appendChild(o); }
-  ch.selectedIndex = (panelSettings.panelCh + 6) & 0x0F;  // the Basic Channel
+  ch.selectedIndex = panelSettings.basicCh;
   panelUpdateTargetOptions();
 
   // The parameters, as those of PRA32-U2 Editor (the steps as Seq Pitch N and Seq Velo N side by side)
