@@ -3708,6 +3708,7 @@ function getStoredCCValueString(index, number) {
 <div class="section misc">
 <div class="misc-group"><span>Basic Ch</span><div class="misc-buttons">
 <select id="selectPanelCh" onchange="onChangePanelCh()" aria-label="Basic Ch"></select><span class="cc" id="spanPanelCCCh"></span>
+<button type="button" id="buttonPanelSetBasicCh" onclick="panelSetBasicChAsked()" style="color: green">Set Basic Ch (to Device)</button>
 <span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
 </div></div>
 </div>
@@ -4067,8 +4068,37 @@ function panelStore() {
 }
 
 // File: the panel parameters exported to a JSON file ("pra32-u2-panel.json"), and imported from it (and sent)
+// Set Basic Ch: the Basic Channel of PRA32-U2 changed by MIDI Basic Ch (#47) and Set Basic Ch (#109) on the Panel CC Ch now,
+// and then the Basic Ch of the editor (so that the Panel CC Ch follows it); kept in the flash by Write (to Device)
+function panelBasicCh() {
+  return ((panelSettings.panelCh + 6) & 0x0F) + 1;
+}
+
+function panelSetBasicCh(basicCh) {
+  panelSendCC(47, basicCh - 1);
+  panelSendCC(109, 0);
+  panelSendCC(109, 127);
+  document.getElementById("selectPanelCh").selectedIndex = basicCh - 1;
+  onChangePanelCh();
+}
+
+function panelConfirmSetBasicCh(basicCh) {
+  return confirm(`Set the Basic Channel of PRA32-U2 from ${panelBasicCh()} to ${basicCh}?\n` +
+    `The Panel CC Ch moves to ${((basicCh + 9) & 0x0F) + 1} (and the synths of PRA32-U2/M from ${basicCh}: set MIDI Ch too).\n` +
+    "Write (to Device) keeps it in the flash.");
+}
+
+function panelSetBasicChAsked() {
+  const text = prompt("Set the Basic Channel of PRA32-U2 to (1-16):", String(panelBasicCh()));
+  if (text === null) { return; }
+  const basicCh = parseInt(text);
+  if (!(basicCh >= 1 && basicCh <= 16)) { alert("The Basic Channel is 1-16."); return; }
+  if (basicCh === panelBasicCh()) { return; }
+  if (panelConfirmSetBasicCh(basicCh)) { panelSetBasicCh(basicCh); }
+}
+
 function panelExport() {
-  const data = { format: "PRA32-U2 Panel Parameters", values: panelValues };
+  const data = { format: "PRA32-U2 Panel Parameters", values: panelValues, basicCh: panelBasicCh() };
   const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -4091,6 +4121,11 @@ function panelImport(event) {
       if (cc in values) { values[cc] = panelClamp(parseInt(data.values[cc]) || 0, 0, 127); }
     }
     panelSetValues(values);
+    // The Basic Channel too, if the file has it (a backup) and it is another
+    const basicCh = parseInt(data.basicCh);
+    if ((basicCh >= 1) && (basicCh <= 16) && (basicCh !== panelBasicCh()) && panelConfirmSetBasicCh(basicCh)) {
+      panelSetBasicCh(basicCh);
+    }
   }).catch(e => alert("Could not import the file: " + e.message));
 }
 
