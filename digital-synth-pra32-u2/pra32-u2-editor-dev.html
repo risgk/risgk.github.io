@@ -2021,6 +2021,16 @@ function updateDisplayOfControl(number, value) {
   localStorage.setItem("key" + controlNumberToStringMap.get(number), value);
 }
 
+// Voice Group Mode (PRA32-U2/M): its slider sends it on the Basic Channel (Basic Ch of Panel & Step Sequencer, 1 by default),
+// whatever MIDI Ch is, as only that of the Main Synth works (the others, e.g. by Send Current, go to the synth of MIDI Ch)
+function onChangeVoiceGroupMode(value) {
+  updateDisplayOfControl(VOICE_GRP_MODE, value);
+  if (midiOutput) {
+    var basicCh = (typeof panelSettings !== "undefined") ? panelSettings.basicCh : 0;
+    midiOutput.send([(CONTROL_CHANGE | basicCh), VOICE_GRP_MODE, parseInt(value)]);
+  }
+}
+
 function onChangeControlChange(number, value) {
   updateDisplayOfControl(number, value);
   if (DIMMING_CONTROLS.indexOf(number) >= 0) {
@@ -3664,7 +3674,7 @@ function getStoredCCValueString(index, number) {
 </div>
 <div class="param">
   <div class="param-name"><b>Voice</b> Group Mode <span class="sup">[Off|Ly2|RLy|RR2|RR3|RR4]</span> <span class="cc">CC#80</span></div>
-  <div class="param-ctrl soft-markers-6"><input  id="inputVOICE_GRP_MODE "  type="range" min="0" max="127" step="1" oninput="onChangeControlChange(VOICE_GRP_MODE , value)"><span    id="spanVOICE_GRP_MODE " >-</span><span   id="span2VOICE_GRP_MODE " >-</span></div>
+  <div class="param-ctrl soft-markers-6"><input  id="inputVOICE_GRP_MODE "  type="range" min="0" max="127" step="1" oninput="onChangeVoiceGroupMode(value)"><span    id="spanVOICE_GRP_MODE " >-</span><span   id="span2VOICE_GRP_MODE " >-</span></div>
 </div>
 </div>
 </div>
