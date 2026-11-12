@@ -3736,7 +3736,7 @@ function getStoredCCValueString(index, number) {
 <div class="misc-group"><span>Basic Ch</span><div class="misc-buttons">
 <select id="selectPanelCh" onchange="onChangePanelCh()" aria-label="Basic Ch"></select><span class="cc" id="spanPanelCCCh"></span>
 <button type="button" id="buttonPanelSetBasicCh" onclick="panelSetBasicChAsked()" style="color: green">Set Basic Ch (to Device)</button>
-<span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()"></select></span>
+<span id="spanPanelTarget">Panel Target Ch<span class="cc">CC#58</span> <select id="selectPanelTarget" onchange="onChangePanelTarget()" title="The synth (channel) that the panel of PRA32-U2/M/P selects; only the Main Synth (+ 0) while Voice Group Mode is Off; kept by Write (to Device), Store, and Export"></select></span>
 </div></div>
 </div>
 <div class="section misc">
@@ -3939,6 +3939,11 @@ function panelValuesOf(data) {
     const cc = renumber[key] || Number(key);
     if (cc in values) { values[cc] = panelClamp(parseInt(data.values[key]) || 0, 0, 127); }
   }
+  // Panel Target Ch (#58): one of PANEL_TARGETS (the Main Synth if not); the current one kept for the data without it (before)
+  if (!(data.values && ("58" in data.values))) {
+    values[58] = (58 in panelValues) ? panelValues[58] : 0;
+  }
+  if (!PANEL_TARGETS.some(t => t[1] === values[58])) { values[58] = 0; }
   return values;
 }
 
@@ -4084,7 +4089,7 @@ function panelUpdateTargetSelected() {
   document.getElementById("selectPanelTarget").selectedIndex = (index >= 0) ? index : 0;
 }
 
-// The channels of Panel Target Ch, by the Basic Channel (the Panel Channel - 10)
+// The channels of Panel Target Ch, by the Basic Channel (the Panel Channel - 14)
 function panelUpdateTargetOptions() {
   const select = document.getElementById("selectPanelTarget");
   const basicCh = panelSettings.basicCh;
