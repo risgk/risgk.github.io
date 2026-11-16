@@ -901,8 +901,8 @@ const USER_PROGRAM_NUMBER_MAX      = 15;
 const PROGRAM_NUMBER_MAX           = 31;
 
 const PRA32_U2_MIDI_CH  = 0;  // 0-based
-// The velocities of the Software Keyboard (selected in its bar, 100 and 64 by default)
-var noteOnVelocity  = 100;
+// The velocities of the Software Keyboard (selected in its bar, 64 and 64 by default)
+var noteOnVelocity  = 64;
 var noteOffVelocity = 64;
 
 
@@ -2895,7 +2895,7 @@ function resetPerformanceControls() {
 // and "127"), and the value entered (by Enter, leaving the field, or the spin buttons) is set to the range (1-127),
 // or back to the last valid one if not a number (e.g. empty)
 function createVelocityInputs() {
-  [["inputNoteOnVelocity", "keyNoteOnVelocity", 100], ["inputNoteOffVelocity", "keyNoteOffVelocity", 64]].forEach(function(item) {
+  [["inputNoteOnVelocity", "keyNoteOnVelocity", 64], ["inputNoteOffVelocity", "keyNoteOffVelocity", 64]].forEach(function(item) {
     var input = document.getElementById(item[0]);
     var key = item[1];
     var value = parseVelocity(localStorage.getItem(key));
@@ -3845,27 +3845,32 @@ const PANEL_PARAM_GROUPS = [
   [["Panel", "Play Mode",  "[Nrm|S+P|Seq]",             53, 0,   v => ["Nrm", "S+P", "Seq"][(v * 4 + 128) >> 8], "soft-markers-3"],
    null,
    ["Panel", "Play Pitch", "",                          54, 0,   v => panelPitchName(v),                        ""],
-   ["Panel", "Play Velo",  "",                          55, 100, v => String(v),                                ""],
+   ["Panel", "Play Velo",  "",                          55, 64,  v => String(v),                                ""],
    ["Panel", "Scale",      "[Maj|Min|Mel|MaP|MiP|Chr]", 51, 0,   v => PANEL_SCALES[(v * 10 + 128) >> 8],        "soft-markers-6"],
    ["Panel", "Pitch Ofst", "[-|+]",                     56, 64,  v => panelSigned(panelClamp(v - 64, -60, 60)), "soft-marker-c"],
    ["Panel", "Transpose",  "[-|+]",                     52, 64,  v => panelSigned(v - 64),                      "soft-marker-c"],
    ["Panel", "MIDI Tx",    "[Off|Clk|All|Nte|C+N|A+N]", 59, 26,  v => ["Off", "Clk", "All", "Nte", "C+N", "A+N"][(v * 10 + 128) >> 8], "soft-markers-6"]],
-  // B-04 to B-09
+  // B-04 to B-10 (the empty one of B-10 is an empty cell here)
   [["Seq", "Step Note",  "[4|8|16]",                  92, 64,  v => ["4", "8", "16"][(v * 4 + 128) >> 8],       "soft-markers-3"],
    ["Seq", "Clock Src",  "[Aut|Int|Ext]",             86, 0,   v => ["Aut", "Int", "Ext"][(v * 4 + 128) >> 8],  "soft-markers-3"],
    ["Seq", "Pitch Ofst", "[-|+]",                     95, 64,  v => panelSigned(panelClamp(v - 64, -60, 60)),   "soft-marker-c"],
    ["Seq", "Transpose",  "[-|+]",                     61, 64,  v => panelSigned(v - 64),                        "soft-marker-c"],
    ["Seq", "Tempo",      "",                          85, 64,  v => String(panelClamp(v * 2 - 8, 30, 240)),     ""],
    ["Seq", "Gate Time",  "[1/6|2/6|3/6|4/6|5/6|6/6]", 87, 51,  v => ((v * 10 + 128) >> 8) + 1 + "/6",           "soft-markers-6"],
-   ["Seq", "Mode",       "[Fwd|Rvs|Bnc]",             89, 0,   v => ["Fwd", "Rvs", "Bnc"][(v * 4 + 128) >> 8],  "soft-markers-3"],
+   ["Seq", "Direction",  "[Fwd|Rvs|Bnc]",             89, 0,   v => ["Fwd", "Rvs", "Bnc"][(v * 4 + 128) >> 8],  "soft-markers-3"],
    ["Seq", "Num Steps",  "",                          88, 32,  v => String(Math.max((v - 2) >> 2, 0) + 1),      ""],
    ["Seq", "On Steps",   "",                          93, 127, v => panelHex2(v),                               ""],
    ["Seq", "Act Steps",  "",                          90, 127, v => panelHex2(v),                               ""],
    ["Seq", "Ch Ofst",    "[+0-+F]",                   60, 0,   v => "+" + (v >> 3).toString(16).toUpperCase(),   ""],
-   ["Seq", "Rx St/Sp",   "[Off|On]",                  94, 0,   v => ["Off", "On"][(v * 2 + 128) >> 8],          "soft-markers-2"]],
+   ["Seq", "Rx St/Sp",   "[Off|On]",                  94, 0,   v => ["Off", "On"][(v * 2 + 128) >> 8],          "soft-markers-2"],
+   ["Seq", "Pattern",    "[Std|4x4]",                 62, 0,   v => (v >= 32) ? "4x4" : "Std",                   ""],
+   null],
   // B-10 to B-17
-  [0, 1, 2, 3, 4, 5, 6, 7].flatMap(i => [["Seq", "Pitch " + i, "", 16 + i, [4, 22, 37, 57, 72, 89, 107, 124][i], v => panelPitchName(v), ""],
-                                         ["Seq", "Velo " + i,  "", 70 + i, 100, v => String(v), ""]]),
+  // (Seq Pattern 4x4: Pitch 4-7 and Velo 4-7 are the shifts, added to the offsets and to the velocity)
+  [0, 1, 2, 3, 4, 5, 6, 7].flatMap(i => [["Seq", "Pitch " + i, "", 16 + i, [4, 22, 37, 57, 72, 89, 107, 124][i],
+                                          v => ((i >= 4) && panelPattern4x4()) ? panelSigned(panelClamp(v - 64, -60, 60)) : panelPitchName(v), ""],
+                                         ["Seq", "Velo " + i,  "", 70 + i, 64,
+                                          v => ((i >= 4) && panelPattern4x4()) ? panelSigned(v - 64) : String(v), ""]]),
 ];
 const PANEL_PARAMS = PANEL_PARAM_GROUPS.flat().filter(p => p);
 const PANEL_ON_STEPS_CC = 93, PANEL_ACT_STEPS_CC = 90;
@@ -3898,12 +3903,15 @@ const PANEL_SCALE_TABLES = [
 ];
 const PANEL_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 // The pitch as PRA32-U2/P shows it (see PRA32_U2_ControlPanel_calc_value_display_pitch())
+// Seq Pattern 4x4 (#62 at 32 and more)
+function panelPattern4x4() { return (panelValues[62] !== undefined) && (panelValues[62] >= 32); }
+
 function panelPitchName(pitch) {
   if (pitch === 0) { return "Off"; }
   pitch = panelClamp(pitch, 4, 124);
   const indexScale = (panelValues[51] * 10 + 128) >> 8;
   const p = Math.floor((((pitch + panelClamp(panelValues[56] - 64, -60, 60) + panelClamp(panelValues[95] - 64, -60, 60) + 3) * 2) + 1) / 5) - 3 + 24;
-  const note = PANEL_SCALE_TABLES[indexScale][p % 24] + Math.floor(p / 24) * 12 - 24;
+  const note = PANEL_SCALE_TABLES[indexScale][((p % 24) + 24) % 24] + Math.floor(p / 24) * 12 - 24;  // below the lowest too
   const n = panelClamp(note + (panelValues[52] - 64), 0, 127);
   const octave = Math.floor(n / 12) - 1;
   return PANEL_NOTE_NAMES[n % 12] + (octave < 0 ? "-" : octave.toString(16).toUpperCase());
@@ -3928,28 +3936,36 @@ function panelSendCC(number, value) {
 }
 
 function panelSave() {
-  try { localStorage.setItem(PANEL_STORAGE_KEY, JSON.stringify({ ccs: PANEL_CCS_VERSION, values: panelValues, settings: panelSettings })); } catch (e) {}
+  try { localStorage.setItem(PANEL_STORAGE_KEY, JSON.stringify({ values: panelNamedValues(panelValues), settings: panelSettings })); } catch (e) {}
 }
 
-// The values of the data kept (in the browser) or exported, by the CC numbers of the Panel Channel now ("ccs": 3);
-// the data before them renumbered: with no "ccs" (e.g. Seq Velo 0-7 #24-31 to #70-77), and "ccs": 2 (Seq Pitch Ofst #91 to #95)
-const PANEL_CCS_VERSION = 3;
-const PANEL_OLD_CCS = { 40: 51, 41: 52, 42: 53, 44: 54, 45: 55, 46: 56,
-  24: 70, 25: 71, 26: 72, 27: 73, 28: 74, 29: 75, 30: 76, 31: 77,
-  48: 85, 49: 86, 50: 87, 51: 88, 52: 89, 53: 90, 54: 95, 55: 92, 56: 93, 57: 94 };
-const PANEL_CCS_2 = { 91: 95 };
+// The values of the data kept (in the browser) or exported: by the names of the panel parameters (as those of PRA32-U2,
+// e.g. "SEQ_TEMPO"), as the synth parameters are kept, not by the CC numbers of the Panel Channel (which the editor uses
+// to send them); the data by the CC numbers (before) is not read (the initial values instead)
+const PANEL_PARAM_NAMES = [
+  [51, "PANEL_SCALE"    ], [52, "PANEL_TRANSPOSE"], [53, "PANEL_PLAY_MODE"], [54, "PANEL_PLAY_PIT" ],
+  [55, "PANEL_PLAY_VELO"], [56, "PANEL_PIT_OFST" ], [58, "PANEL_TARGET_CH"], [59, "PANEL_MIDI_TX"  ],
+  [85, "SEQ_TEMPO"      ], [86, "SEQ_CLOCK_SRC"  ], [87, "SEQ_GATE_TIME"  ], [88, "SEQ_NUM_STEPS"  ],
+  [89, "SEQ_DIRECTION"  ], [90, "SEQ_ACT_STEPS"  ], [92, "SEQ_STEP_NOTE"  ], [93, "SEQ_ON_STEPS"   ],
+  [94, "SEQ_RX_ST_SP"   ], [95, "SEQ_PIT_OFST"   ], [60, "SEQ_CH_OFST"    ], [61, "SEQ_TRANSPOSE"  ],
+  [62, "SEQ_PATTERN"    ],
+  ...[0, 1, 2, 3, 4, 5, 6, 7].map(i => [16 + i, "SEQ_PITCH_" + i]),
+  ...[0, 1, 2, 3, 4, 5, 6, 7].map(i => [70 + i, "SEQ_VELO_" + i]),
+];
+
+function panelNamedValues(values) {
+  const named = {};
+  PANEL_PARAM_NAMES.forEach(([cc, name]) => { named[name] = values[cc]; });
+  return named;
+}
 
 function panelValuesOf(data) {
   const values = panelDefaultValues();
-  const renumber = (data.ccs === PANEL_CCS_VERSION) ? {} : (data.ccs === 2) ? PANEL_CCS_2 : PANEL_OLD_CCS;
-  for (const key in data.values || {}) {
-    const cc = renumber[key] || Number(key);
-    if (cc in values) { values[cc] = panelClamp(parseInt(data.values[key]) || 0, 0, 127); }
-  }
-  // Panel Target Ch (#58): one of PANEL_TARGETS (the Main Synth if not); the current one kept for the data without it (before)
-  if (!(data.values && ("58" in data.values))) {
-    values[58] = (58 in panelValues) ? panelValues[58] : 0;
-  }
+  const named = data.values || {};
+  PANEL_PARAM_NAMES.forEach(([cc, name]) => {
+    if (name in named) { values[cc] = panelClamp(parseInt(named[name]) || 0, 0, 127); }
+  });
+  // Panel Target Ch (#58): one of PANEL_TARGETS (the Main Synth if not)
   if (!PANEL_TARGETS.some(t => t[1] === values[58])) { values[58] = 0; }
   return values;
 }
@@ -3961,14 +3977,7 @@ function panelLoad() {
     if (data) {
       panelValues = panelValuesOf(data);
       const settings = data.settings || {};
-      if ((settings.basicCh === undefined) && (settings.panelCh !== undefined)) {  // kept as the Panel CC Ch (+ 10) before
-        settings.basicCh = (settings.panelCh + 6) & 0x0F;
-      }
       panelSettings.basicCh = panelClamp(parseInt(settings.basicCh) || 0, 0, 15);
-      if ((settings.target !== undefined) && !(data.values && ("58" in data.values))) {  // kept as a setting before
-        const t = PANEL_TARGETS[panelClamp(parseInt(settings.target) || 0, 0, PANEL_TARGETS.length - 1)];
-        panelValues[58] = t[1];
-      }
     }
   } catch (e) {}
 }
@@ -4052,7 +4061,7 @@ function onClickPanelPlay() {
 function sendPanelCurrent() {
   panelSendCC(58, panelValues[58]);
   // The Panel Parameters first (the Scale and the offsets that the pitches need), and then the others
-  [51, 52, 53, 54, 55, 56, 59, 60, 61, 85, 86, 87, 88, 89, 90, 92, 93, 94, 95].forEach(cc => panelSendCC(cc, panelValues[cc]));
+  [51, 52, 53, 54, 55, 56, 59, 60, 61, 62, 85, 86, 87, 88, 89, 90, 92, 93, 94, 95].forEach(cc => panelSendCC(cc, panelValues[cc]));
   for (let i = 0; i < 8; i++) { panelSendCC(16 + i, panelValues[16 + i]); panelSendCC(70 + i, panelValues[70 + i]); }
 }
 
@@ -4134,7 +4143,7 @@ function panelRecall() {
 }
 
 function panelStore() {
-  try { localStorage.setItem(PANEL_MEMORY_KEY, JSON.stringify({ ccs: PANEL_CCS_VERSION, values: panelValues })); } catch (e) {}
+  try { localStorage.setItem(PANEL_MEMORY_KEY, JSON.stringify({ values: panelNamedValues(panelValues) })); } catch (e) {}
   panelUpdateMemoryButtons();
 }
 
@@ -4169,7 +4178,7 @@ function panelSetBasicChAsked() {
 }
 
 function panelExport() {
-  const data = { format: "PRA32-U2 Panel Parameters", ccs: PANEL_CCS_VERSION, values: panelValues, basicCh: panelBasicCh() };
+  const data = { format: "PRA32-U2 Panel Parameters", values: panelNamedValues(panelValues), basicCh: panelBasicCh() };
   const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
