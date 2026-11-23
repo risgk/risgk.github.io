@@ -973,8 +973,21 @@
     .preset-grid .btn.empty {
       color: #a0a0a0;
     }
+    /* The program, Save to Device and Program Change on one line: the select as narrow as "#0". */
+    .device-row {
+      flex-wrap: nowrap;
+    }
     .device-row select {
       flex: 0 0 auto;
+      width: auto;
+      padding-left: 6px;
+      padding-right: 2px;
+    }
+    .device-row .btn {
+      min-width: 0;
+      padding-left: 4px;
+      padding-right: 4px;
+      white-space: nowrap;
     }
     .check {
       display: flex;
@@ -1638,7 +1651,7 @@
       </div>
       <button class="btn" id="reset-layout" title="Put the panels back where they were at first. A panel is moved by dragging its heading, with the columns two or four to a row, or by its arrows in one column; where they are is kept in this browser, for every patch. Undo puts them back as they were.">Reset Layout</button>
     </div>
-    <button class="btn primary" id="init-values" title="Set each CC value and each value of a parameter with no CC back to what the synth powers up at, and send them; the wiring is kept">Initialize Values</button>
+    <button class="btn primary" id="init-values" title="Set each CC value and each value of a parameter with no CC back to what the patch had as it was loaded or saved last (Load JSON, Recall, a Program Change followed, Store, Save to Device, Init), and send them; the wiring is kept. With Shift, to those of Init (the default patch)">Reset Values</button>
   </div>
 </div>
 
@@ -1709,6 +1722,7 @@
       <div class="field-label">Store (to Browser)</div>
       <div class="preset-grid" id="preset-store"></div>
       <div class="btn-row">
+        <button class="btn" id="btn-presets-undo" title="Bring back the user preset that the last Store (or Save to Device) replaced, in the browser only (not what the synth keeps); again to redo it" disabled>Undo Store</button>
         <button class="btn" id="btn-presets-import" title="Put the user presets #0-7 back from a file that Export All saved, in place of all of them">Import All</button>
         <button class="btn" id="btn-presets-export" title="Save the user presets #0-7 to a file, all of them">Export All</button>
         <input type="file" id="file-presets" accept=".json,application/json" hidden>
@@ -3553,6 +3567,7 @@
       const next = deserialize(JSON.parse(text));
       pushHistory(undefined, true);
       state = next;
+      setBaseline();
       muteNextChanges = true;  // The whole patch may change, as by Send Patch
       renderAll();
       fitView();
@@ -3607,8 +3622,14 @@
       name = normalized;
       message = `Only up to ${PRESET_NAME_LENGTH_MAX} ASCII letters, digits, and symbols can be used.\n`;
     }
-    state.name = name.trim();
-    document.getElementById('patch-name').value = state.name;
+    // A new name is a change of the patch, as one typed in the Name field, and so can be undone;
+    // the user preset written stays.
+    if (name.trim() !== state.name) {
+      pushHistory();
+      state.name = name.trim();
+      document.getElementById('patch-name').value = state.name;
+      updateExport();
+    }
     writePreset(number, false);
     saveLocal();
   }
@@ -3618,6 +3639,8 @@
   // The spec hash of the editor is kept with one that Save to Device wrote, as the synth keeps it with
   // the program: a version numbered otherwise does not load the program, and so is not followed.
   function writePreset(number, onDevice) {
+    keepForUndoStore(number);
+    setBaseline();
     try {
       localStorage.setItem(PRESET_KEY + number, JSON.stringify({ ...serialize(state), onDevice, specHash: onDevice ? SPEC.specHash : undefined }));
     } catch (e) {
@@ -3625,6 +3648,37 @@
     }
     updatePresetButtons();
   }
+
+  // Undo Store: the user preset that the last Store (or Save to Device) replaced, kept in the
+  // browser as it was (null for an empty one); undoing swaps it back in, so that a second Undo
+  // Store redoes it, as Undo Write of PRA32-U2.
+  const UNDO_STORE_KEY = 'spms1-type2-editor-preset-undo';
+  function keepForUndoStore(number) {
+    try {
+      localStorage.setItem(UNDO_STORE_KEY, JSON.stringify({ number, preset: localStorage.getItem(PRESET_KEY + number) }));
+    } catch (e) { /* storage unavailable */ }
+    updateUndoStoreButton();
+  }
+  function readUndoStore() {
+    try { return JSON.parse(localStorage.getItem(UNDO_STORE_KEY)); } catch (e) { return null; }
+  }
+  function updateUndoStoreButton() {
+    const kept = readUndoStore();
+    const button = document.getElementById('btn-presets-undo');
+    button.disabled = !kept;
+    if (kept) button.title = `Bring back the user preset #${kept.number} as it was before the last Store (or Save to Device), in the browser only (not what the synth keeps); again to redo it`;
+  }
+  document.getElementById('btn-presets-undo').addEventListener('click', () => {
+    const kept = readUndoStore();
+    if (!kept) return;
+    try {
+      const now = localStorage.getItem(PRESET_KEY + kept.number);
+      if (kept.preset === null) localStorage.removeItem(PRESET_KEY + kept.number);
+      else localStorage.setItem(PRESET_KEY + kept.number, kept.preset);
+      localStorage.setItem(UNDO_STORE_KEY, JSON.stringify({ number: kept.number, preset: now }));
+    } catch (e) { /* storage unavailable */ }
+    updatePresetButtons();
+  });
 
   // SPMS-1 Web keeps its programs until the page is closed: the ones saved to it since the page
   // was opened.
@@ -3644,6 +3698,7 @@
     }
     pushHistory(undefined, true);
     state = deserialize(saved);
+    setBaseline();
     if (midiOutput) lastSent = snapshotTable();
     markProgramPutBack(false);
     renderAll();
@@ -3660,6 +3715,7 @@
       state = defaultState();
       Object.assign(state, panels);
     }
+    setBaseline();
     muteNextChanges = true;  // The whole patch may change, as by Send Patch
     renderAll();
     fitView();
@@ -3676,6 +3732,7 @@
     }
   }
   updatePresetButtons();
+  updateUndoStoreButton();
 
   // Export All and Import All: the user presets #0-7 in one file, each as Save JSON writes a patch
   // (with whether Save to Device wrote it, and the spec hash then), or null for an empty one.
@@ -3726,6 +3783,7 @@
     document.getElementById('show-no-cc').checked = false;
     try { localStorage.setItem(SHOW_NO_CC_KEY, ''); } catch (e) { /* storage unavailable */ }
     setFavoritesOnly(true);
+    setBaseline();
     muteNextChanges = true;  // The whole patch may change, as by Send Patch
     renderAll();
     fitView();
@@ -4071,6 +4129,7 @@
     pushHistory(undefined, true);
     const d = defaultState();
     for (const k of ['order', 'inputs', 'params', 'cc', 'values', 'paramValues']) state[k] = d[k];
+    setBaseline();
     orderMirror = new Array(MODULES_SIZE).fill(0);
     orderWritten = new Array(MODULES_SIZE).fill(0);
     orderWrites = 0;
@@ -4794,24 +4853,48 @@
     });
   }
 
-  document.getElementById('init-values').addEventListener('click', () => {
+  // The values of the patch as it was loaded or saved last (the baseline), which Reset Values
+  // puts back: the CC values by CC number and the values of the parameters with no CC by key,
+  // kept in the browser with the patch. Not a part of the undo history.
+  const BASELINE_KEY = 'spms1-type2-editor-baseline';
+  let baseline = null;
+  function setBaseline() {
+    baseline = { values: { ...state.values }, paramValues: { ...state.paramValues } };
+    try { localStorage.setItem(BASELINE_KEY, JSON.stringify(baseline)); } catch (e) { /* storage unavailable */ }
+  }
+  function loadBaseline() {
+    try { baseline = JSON.parse(localStorage.getItem(BASELINE_KEY)); } catch (e) { baseline = null; }
+    if (!baseline || !baseline.values || !baseline.paramValues) setBaseline();
+  }
+
+  // Reset Values: each CC value in use and each value of a parameter with no CC back to the
+  // baseline, or with Shift to the default patch's; one with no value in the baseline, as a CC given
+  // since, to the default patch's too. Sent at once; the wiring is kept.
+  document.getElementById('init-values').addEventListener('click', (event) => {
+    const target = (event.shiftKey || !baseline) ? { values: {}, paramValues: {} } : baseline;
     pushHistory();
     CONTROL_ITEMS.forEach(c => {
       const cc = state.cc[c.key];
-      if (ccInUse(cc) && c.defaultValue != null) state.values[cc] = c.defaultValue;
+      if (!ccInUse(cc)) return;
+      const kept = target.values[cc];
+      if (kept != null) state.values[cc] = kept;
+      else if (c.defaultValue != null) state.values[cc] = c.defaultValue;
     });
-    VALUE_ITEMS.forEach(p => { state.paramValues[p.key] = p.defaultValue; });
+    VALUE_ITEMS.forEach(p => {
+      const kept = target.paramValues[p.key];
+      state.paramValues[p.key] = (kept != null) ? kept : p.defaultValue;
+    });
     if (midiOutput) {
       const st = 0xB0 | exportOptions().ch;
       ccEntries().forEach(e => midiOutput.send([st, e.cc, e.value]));
       VALUE_ITEMS.forEach(p => {
         const nrpn = 512 + p.entry;
-        midiOutput.send([st, 99, nrpnMSB(nrpn), st, 98, nrpn & 0x7F, st, 6, p.defaultValue]);
+        midiOutput.send([st, 99, nrpnMSB(nrpn), st, 98, nrpn & 0x7F, st, 6, state.paramValues[p.key]]);
       });
       midiOutput.send([st, 101, 127, st, 100, 127]);
       if (lastSent) {
         ccEntries().forEach(e => lastSent.set('c' + e.cc, e.value));
-        VALUE_ITEMS.forEach(p => lastSent.set('n' + (512 + p.entry), p.defaultValue));
+        VALUE_ITEMS.forEach(p => lastSent.set('n' + (512 + p.entry), state.paramValues[p.key]));
       }
     }
     refreshControls();
@@ -5339,6 +5422,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     placeMIDIPanel();
     loadLocal();
+    loadBaseline();
     applyMIDISettings(loadMIDISettings());
     renderAll();
     createKeyboard();
