@@ -937,6 +937,11 @@
     .btn.primary:hover {
       background: var(--primary-hover);
     }
+    /* Send Patch after a Program Change: the synth has the program, not the patch shown, until sent. */
+    #btn-send.differs {
+      outline: 2px dashed var(--primary-color);
+      outline-offset: 2px;
+    }
     /* The Mute button keeps its weight when on, so that it does not widen and move the buttons by it. */
     #btn-mute.primary {
       font-weight: normal;
@@ -948,6 +953,25 @@
     }
     .btn-row .btn {
       flex: 1;
+    }
+    /* The user presets, #0-7, as PRA32-U2 Editor has them: #4-7 above #0-3, each with its name. */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .preset-grid .btn {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
+      padding-left: 4px;
+      padding-right: 4px;
+      font-size: 0.78rem;
+    }
+    .preset-grid .btn.empty {
+      color: #a0a0a0;
     }
     .device-row select {
       flex: 0 0 auto;
@@ -1645,7 +1669,7 @@
       <h2><button type="button" class="fold-toggle" aria-expanded="true" title="Show or hide this panel"><span class="fold-caret" aria-hidden="true">&#9660;</span>Patch</button></h2>
       <div class="form-group">
         <label for="patch-name">Name</label>
-        <input type="text" id="patch-name" maxlength="64" title="The synth keeps 32 characters of it with a program, printable ASCII (others as ?), if SysEx goes to it">
+        <input type="text" id="patch-name" maxlength="64" title="The synth keeps 32 characters of it with a program, printable ASCII (others as ?)">
       </div>
       <div class="btn-row" style="margin-bottom: 6px;">
         <button class="btn" id="btn-save">Save JSON</button>
@@ -1660,8 +1684,8 @@
       </div>
       <div class="btn-row device-row" style="margin-top: 6px;">
         <select id="device-program" aria-label="Program" title="The program of the synth, #0-7, that Save to Device and Program Change act on; the synth loads #0 at power-up"></select>
-        <button class="btn" id="btn-save-device" title="Keep the patch in the synth's flash as the program selected (NRPN Program and Save, between Mute on and off), in place of the one kept there. The sound stops for about 0.1 s.">Save to Device</button>
-        <button class="btn" id="btn-pc-device" title="Send Program Change: the synth puts the program selected back, if it keeps one, fading the sound out and in (wait about 30 ms before sending CCs or NRPN). The patch shown here stays as it is.">Program Change</button>
+        <button class="btn" id="btn-save-device" title="Keep the patch in the synth's flash as the program selected (NRPN Program and Save, between Mute on and off), in place of the one kept there, and in the browser as the user preset of the same number. The sound stops for about 0.1 s.">Save to Device</button>
+        <button class="btn" id="btn-pc-device" title="Send Program Change: the synth puts the program selected back, if it keeps one, fading the sound out and in (wait about 30 ms before sending CCs or NRPN). If Save to Device saved it from here, the user preset of the number, which it wrote too, is shown as the synth has it; otherwise the patch shown stays as it is, the changes made here go to that program, and Send Patch puts the patch shown on the synth.">Program Change</button>
       </div>
       <p class="hint" style="margin-top: 8px;">
         MIDI In is passed through to the synth, and a CC on the channel above moves every slot
@@ -1676,6 +1700,14 @@
         CC#: <span class="cc-key shared">34</span> shared with another parameter,
         <span class="cc-key none">0</span> no CC, <span class="cc-key warn">6</span> reserved
       </p>
+    </div>
+
+    <div class="panel" id="side-presets">
+      <h2><button type="button" class="fold-toggle" aria-expanded="true" title="Show or hide this panel"><span class="fold-caret" aria-hidden="true">&#9660;</span>Presets</button></h2>
+      <div class="field-label">Recall (from Browser)</div>
+      <div class="preset-grid" id="preset-recall"></div>
+      <div class="field-label">Store (to Browser)</div>
+      <div class="preset-grid" id="preset-store"></div>
     </div>
 
     <div class="panel" id="side-order">
@@ -3526,6 +3558,117 @@
     fileInput.value = '';
   });
 
+  // ---- User presets (in the browser) --------------------------------------------------------
+
+  // Eight patches kept in the browser, #0-7, as the user presets of PRA32-U2 Editor: Store keeps
+  // the patch shown as one, with a name asked for (that of the patch, which it becomes), and User
+  // Preset puts one back as Load JSON does (an empty one as Init does, keeping the layout).
+  const PRESET_KEY = 'spms1-type2-editor-preset-';
+  const PRESET_NAME_LENGTH_MAX = 32;  // as the synth keeps a name
+  const PRESET_ORDER = [4, 5, 6, 7, 0, 1, 2, 3];
+
+  function normalizePresetName(name) {
+    return String(name).replace(/[^\x20-\x7E]/g, '').trim().slice(0, PRESET_NAME_LENGTH_MAX);
+  }
+
+  function readPreset(number) {
+    try { return JSON.parse(localStorage.getItem(PRESET_KEY + number)); } catch (e) { return null; }
+  }
+
+  function updatePresetButtons() {
+    for (const number of PRESET_ORDER) {
+      const preset = readPreset(number);
+      const name = preset && preset.name ? normalizePresetName(preset.name) : '';
+      for (const kind of ['recall', 'store']) {
+        const button = document.getElementById(`preset-${kind}-${number}`);
+        button.textContent = `#${number} ${name || '---'}`;
+        button.title = (kind === 'recall' ? 'Put back' : 'Store the patch shown as') + ` the user preset #${number}` +
+          (name ? `, "${name}"` : preset ? '' : ' (empty)') +
+          (preset && preset.onDevice ? ', as saved to the synth as program #' + number : '');
+        button.classList.toggle('empty', !preset);
+      }
+    }
+  }
+
+  function storePreset(number) {
+    let name = normalizePresetName(readPreset(number) ? readPreset(number).name : state.name) || normalizePresetName(state.name);
+    let message = '';
+    for (;;) {
+      name = prompt(`${message}Store the patch shown as the user preset #${number}?\nName (up to ${PRESET_NAME_LENGTH_MAX} ASCII letters, digits, and symbols):`, name);
+      if (name == null) return;
+      const normalized = normalizePresetName(name);
+      if (normalized === name.trim()) break;
+      name = normalized;
+      message = `Only up to ${PRESET_NAME_LENGTH_MAX} ASCII letters, digits, and symbols can be used.\n`;
+    }
+    state.name = name.trim();
+    document.getElementById('patch-name').value = state.name;
+    writePreset(number, false);
+    saveLocal();
+  }
+
+  // A user preset written: by Store (to Browser), or by Save to Device as the program of the same
+  // number, which marks it as what the synth keeps (onDevice), until Store writes it again.
+  function writePreset(number, onDevice) {
+    try {
+      localStorage.setItem(PRESET_KEY + number, JSON.stringify({ ...serialize(state), onDevice }));
+    } catch (e) {
+      alert('Could not store it in the browser.');
+    }
+    updatePresetButtons();
+  }
+
+  // SPMS-1 Web keeps its programs until the page is closed: the ones saved to it since the page
+  // was opened.
+  const webSynthPrograms = new Set();
+
+  // A Program Change, sent or arriving at MIDI In: the synth puts the program back. The user preset
+  // of the number, if Save to Device wrote it (to SPMS-1 Web, since the page was opened), is that
+  // program, and is shown here as the synth has it, with nothing sent; otherwise the patch shown
+  // stays, the changes made after it go to the program, and Send Patch is marked.
+  function followProgram(number) {
+    const saved = readPreset(number);
+    const onSynth = saved && saved.onDevice &&
+                    (!(midiOutput && midiOutput.isSpms1WebSynth) || webSynthPrograms.has(number));
+    if (!onSynth) {
+      markProgramPutBack(true);
+      return;
+    }
+    pushHistory(undefined, true);
+    state = deserialize(saved);
+    if (midiOutput) lastSent = snapshotTable();
+    markProgramPutBack(false);
+    renderAll();
+    fitView();
+  }
+
+  function recallPreset(number) {
+    const saved = readPreset(number);
+    pushHistory(undefined, true);
+    if (saved) {
+      state = deserialize(saved);
+    } else {
+      const panels = { favorites: state.favorites, layout: state.layout };
+      state = defaultState();
+      Object.assign(state, panels);
+    }
+    muteNextChanges = true;  // The whole patch may change, as by Send Patch
+    renderAll();
+    fitView();
+  }
+
+  for (const number of PRESET_ORDER) {
+    for (const kind of ['recall', 'store']) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.id = `preset-${kind}-${number}`;
+      button.addEventListener('click', () => (kind === 'recall' ? recallPreset : storePreset)(number));
+      document.getElementById(`preset-${kind}`).appendChild(button);
+    }
+  }
+  updatePresetButtons();
+
   document.getElementById('btn-undo').addEventListener('click', undo);
   document.getElementById('btn-redo').addEventListener('click', redo);
   document.getElementById('btn-init').addEventListener('click', () => {
@@ -3820,9 +3963,12 @@
     if (cmd === 0x90 || cmd === 0x80) {
       setKeyActive(data[1], cmd === 0x90 && data[2] > 0);
     } else if (cmd === 0xC0) {
-      // The synth puts a program back, so it no longer has what was sent; the one selected follows.
-      lastSent = null;
-      if (data[1] < 8) devicePrograms.selectedIndex = data[1];
+      // The synth puts a program back, which may not be the patch shown (see markProgramPutBack);
+      // the one selected follows.
+      if (data[1] < 8) {
+        devicePrograms.selectedIndex = data[1];
+        followProgram(data[1]);
+      }
     } else if (cmd === 0xB0) {
       const [, cc, value] = data;
       // The synth already has it from the pass-through.
@@ -4017,6 +4163,18 @@
     opts.muteAfter = !userMuted;
     buildMessages(opts).forEach(l => midiOutput.send(l.bytes));
     lastSent = snapshotTable();
+    markProgramPutBack(false);
+  }
+
+  // After a Program Change the synth has the program put back, not the patch shown: the changes
+  // made here still go out as they are made, to that program, and Send Patch, marked meanwhile,
+  // puts the whole patch shown on the synth, when the user chooses to.
+  function markProgramPutBack(on) {
+    const button = document.getElementById('btn-send');
+    button.classList.toggle('differs', on);
+    button.title = on
+      ? 'The synth has the program put back by Program Change, not the patch shown: changes made here go to that program. Send the whole patch shown to the synth: NRPN and CC values, between Mute on and off.'
+      : 'Send the whole patch again: NRPN and CC values, between Mute on and off. Every change is sent as it is made.';
   }
 
   // The Mute button: NRPN Mute, on or off, sent as it is turned, or only shown, as when a Mute
@@ -4089,7 +4247,7 @@
       alert('Select the synth in MIDI Out first.');
       return;
     }
-    if (!confirm(`Save this patch in the synth as program #${devicePrograms.selectedIndex}? It replaces the patch kept there${devicePrograms.selectedIndex === 0 ? ', and the synth loads it at power-up' : ''}.`)) return;
+    if (!confirm(`Save this patch in the synth as program #${devicePrograms.selectedIndex}, and in the browser as the user preset #${devicePrograms.selectedIndex}? It replaces the patches kept there${devicePrograms.selectedIndex === 0 ? ', and the synth loads it at power-up' : ''}.`)) return;
     const opts = exportOptions();
     const st = 0xB0 | opts.ch;
     opts.sysex = outputTakesSysEx();
@@ -4100,15 +4258,19 @@
     buildMessages(opts).forEach(l => midiOutput.send(l.bytes));
     lastSent = snapshotTable();
     const program = devicePrograms.selectedIndex;
-    // The name goes with it as SysEx, where SysEx goes; the synth keeps 32 bytes of printable ASCII.
+    // The name goes with it as SysEx; the synth keeps 32 bytes of printable ASCII.
     if (opts.sysex) midiOutput.send(nameSysex(opts.ch, state.name));
     const save = [st, 99, NRPN_SYSTEM_MSB, st, 98, 4, st, 6, program, st, 98, 2, st, 6, 127];
     midiOutput.send([...save, ...(userMuted ? [] : muteLine(st, false).bytes), st, 101, 127, st, 100, 127]);
+    // The same patch as the user preset of the number, marked as on the synth, so that a Program
+    // Change to it shows it here too (see followProgram).
+    writePreset(program, true);
+    if (midiOutput.isSpms1WebSynth) webSynthPrograms.add(program);
   });
 
   // The programs of the synth, #0-7: Save to Device keeps the patch as the one selected, and
   // Program Change puts it back on the synth, which fades the sound out and in; the patch shown
-  // here stays, so what was sent is no longer what the synth has (lastSent).
+  // here stays, and the changes made after it go to that program (see markProgramPutBack).
   const devicePrograms = document.getElementById('device-program');
   for (let i = 0; i < 8; i++) devicePrograms.add(new Option('#' + i, String(i)));
   document.getElementById('btn-pc-device').addEventListener('click', () => {
@@ -4117,7 +4279,7 @@
       return;
     }
     midiOutput.send([0xC0 | exportOptions().ch, devicePrograms.selectedIndex]);
-    lastSent = null;
+    followProgram(devicePrograms.selectedIndex);
   });
 
   // SysEx command 02, the name of the patch (see spms1_patching.md): 32 bytes at most, printable
@@ -5097,7 +5259,7 @@
   // Each side panel of the patch tab folds to its heading, as the soft keyboard does, and stays
   // as it was left. With all of them folded the side column narrows, so the canvas widens.
   const SIDE_FOLD_KEY = 'spms1-type2-editor-side-folded';
-  const SIDE_PANELS = ['side-patch', 'side-order', 'side-export'];
+  const SIDE_PANELS = ['side-patch', 'side-presets', 'side-order', 'side-export'];
   let sideFolded = {};
 
   function setSideFolded(id, folded) {
