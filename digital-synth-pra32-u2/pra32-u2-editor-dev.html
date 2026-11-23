@@ -4607,13 +4607,16 @@ function getStoredCCValueString(index, number) {
 <button type="button" id="buttonPanelRedo" onclick="panelRedo()" title="Forward again to the panel parameters before Undo (Ctrl+Y or Ctrl+Shift+Z, with the focus here)">Redo</button></div></div>
 </div>
 <div class="section misc">
-<div class="misc-group"><span>Store &amp; Write</span><div class="misc-buttons">
+<div class="misc-group"><span>Store &amp; File</span><div class="misc-buttons">
 <button type="button" onclick="panelInitValues()">Initialize</button>
 <button type="button" id="buttonPanelRecall" onclick="panelRecall()">User Preset (from Browser)</button>
 <button type="button" id="buttonPanelStore" onclick="panelStore()">Store (to Browser)</button>
 <input type="file" id="filePanelImport" style="display:none" accept=".json">
 <button type="button" onclick="document.getElementById('filePanelImport').click()">Import</button>
-<button type="button" onclick="panelExport()">Export</button>
+<button type="button" onclick="panelExport()">Export</button></div></div>
+</div>
+<div class="section misc">
+<div class="misc-group"><span>Write &amp; Read</span><div class="misc-buttons">
 <span id="divPanelOps" style="display:contents"></span></div></div>
 </div>
 </details>
@@ -4749,10 +4752,12 @@ const PANEL_PARAM_GROUPS = [
 const PANEL_PARAMS = PANEL_PARAM_GROUPS.flat().filter(p => p);
 const PANEL_ON_STEPS_CC = 93, PANEL_ACT_STEPS_CC = 90;
 const PANEL_OPERATIONS = [
-  // Write (and its Undo), and Read to test them; not Init: Read of PRA32-U2 changes the parameters there, not in the editor
+  // Write (and its Undo), and Read (and its Undo) to test them; not Init: Read of PRA32-U2 changes the parameters there,
+  // not in the editor
   [102, "Write (to Device)", "Write the panel parameters of PRA32-U2 (or PRA32-U2/M/P Web, until the page is closed) to its flash", true],
   [105, "Undo Write", "Bring back what the last Write replaced in the flash of PRA32-U2", true],
   [103, "Read (on Device)", "Read the panel parameters of PRA32-U2 from its flash (e.g. to test Write; the editor keeps its values)", false],
+  [106, "Undo Read", "Bring back the panel parameters of PRA32-U2 that the last Read replaced (the editor keeps its values)", false],
 ];
 // The channels that PRA32-U2/M/P (and PRA32-U2/M/P Web) selects (Panel Target Ch): [name, the Basic Channel + this]
 const PANEL_TARGETS = [
