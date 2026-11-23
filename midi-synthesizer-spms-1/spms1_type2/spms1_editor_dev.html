@@ -1661,7 +1661,7 @@
       <div class="btn-row device-row" style="margin-top: 6px;">
         <select id="device-program" aria-label="Program" title="The program of the synth, #0-7, that Save to Device and Program Change act on; the synth loads #0 at power-up"></select>
         <button class="btn" id="btn-save-device" title="Keep the patch in the synth's flash as the program selected (NRPN Program and Save, between Mute on and off), in place of the one kept there. The sound stops for about 0.1 s.">Save to Device</button>
-        <button class="btn" id="btn-pc-device" title="Send Program Change: the synth puts the program selected back, if it keeps one, fading the sound out and in. The patch shown here stays as it is.">Program Change</button>
+        <button class="btn" id="btn-pc-device" title="Send Program Change: the synth puts the program selected back, if it keeps one, fading the sound out and in (wait about 30 ms before sending CCs or NRPN). The patch shown here stays as it is.">Program Change</button>
       </div>
       <p class="hint" style="margin-top: 8px;">
         MIDI In is passed through to the synth, and a CC on the channel above moves every slot
