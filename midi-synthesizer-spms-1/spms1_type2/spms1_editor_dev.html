@@ -1708,6 +1708,12 @@
       <div class="preset-grid" id="preset-recall"></div>
       <div class="field-label">Store (to Browser)</div>
       <div class="preset-grid" id="preset-store"></div>
+      <div class="btn-row">
+        <button class="btn" id="btn-presets-import" title="Put the user presets #0-7 back from a file that Export All saved, in place of all of them">Import All</button>
+        <button class="btn" id="btn-presets-export" title="Save the user presets #0-7 to a file, all of them">Export All</button>
+        <input type="file" id="file-presets" accept=".json,application/json" hidden>
+      </div>
+      <p class="load-error" id="presets-error" role="alert" hidden></p>
     </div>
 
     <div class="panel" id="side-order">
@@ -3609,9 +3615,11 @@
 
   // A user preset written: by Store (to Browser), or by Save to Device as the program of the same
   // number, which marks it as what the synth keeps (onDevice), until Store writes it again.
+  // The spec hash of the editor is kept with one that Save to Device wrote, as the synth keeps it with
+  // the program: a version numbered otherwise does not load the program, and so is not followed.
   function writePreset(number, onDevice) {
     try {
-      localStorage.setItem(PRESET_KEY + number, JSON.stringify({ ...serialize(state), onDevice }));
+      localStorage.setItem(PRESET_KEY + number, JSON.stringify({ ...serialize(state), onDevice, specHash: onDevice ? SPEC.specHash : undefined }));
     } catch (e) {
       alert('Could not store it in the browser.');
     }
@@ -3628,7 +3636,7 @@
   // stays, the changes made after it go to the program, and Send Patch is marked.
   function followProgram(number) {
     const saved = readPreset(number);
-    const onSynth = saved && saved.onDevice &&
+    const onSynth = saved && saved.onDevice && saved.specHash === SPEC.specHash &&
                     (!(midiOutput && midiOutput.isSpms1WebSynth) || webSynthPrograms.has(number));
     if (!onSynth) {
       markProgramPutBack(true);
@@ -3668,6 +3676,45 @@
     }
   }
   updatePresetButtons();
+
+  // Export All and Import All: the user presets #0-7 in one file, each as Save JSON writes a patch
+  // (with whether Save to Device wrote it, and the spec hash then), or null for an empty one.
+  const PRESETS_FORMAT = 'spms1-type2-presets';
+  document.getElementById('btn-presets-export').addEventListener('click', () => {
+    const presets = [];
+    for (let number = 0; number < 8; number++) presets.push(readPreset(number));
+    const blob = new Blob([JSON.stringify({ format: PRESETS_FORMAT, version: 1, presets }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'presets-spms1_type2.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  const presetsFile = document.getElementById('file-presets');
+  document.getElementById('btn-presets-import').addEventListener('click', () => presetsFile.click());
+  presetsFile.addEventListener('change', () => {
+    const file = presetsFile.files[0];
+    if (!file) return;
+    const error = document.getElementById('presets-error');
+    error.hidden = true;
+    file.text().then(text => {
+      const obj = JSON.parse(text);
+      if (!obj || obj.format !== PRESETS_FORMAT || !Array.isArray(obj.presets) || obj.presets.length !== 8) {
+        throw new Error('Not the user presets of SPMS-1 (type-2) Editor');
+      }
+      obj.presets.forEach(p => { if (p !== null) deserialize(p); });  // each one a patch, or an error before anything is replaced
+      if (!confirm('Replace the user presets #0-7 with the ones in the file?')) return;
+      obj.presets.forEach((p, number) => {
+        if (p === null) localStorage.removeItem(PRESET_KEY + number);
+        else localStorage.setItem(PRESET_KEY + number, JSON.stringify(p));
+      });
+      updatePresetButtons();
+    }).catch(err => {
+      error.textContent = `Could not import "${file.name}": ${err.message}`;
+      error.hidden = false;
+    });
+    presetsFile.value = '';
+  });
 
   document.getElementById('btn-undo').addEventListener('click', undo);
   document.getElementById('btn-redo').addEventListener('click', redo);
